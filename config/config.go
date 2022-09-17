@@ -14,8 +14,10 @@ type Env struct {
 
 type Config struct {
 	Env             Env
-	QueryID         []int             `required:"true" short:"q" long:"query-id"`
-	QueryParameters map[string]string `required:"false" short:"p" long:"query-parameter"`
+	PollInterval    int               `long:"poll-interval" description:"Interval in seconds for polling for results" default:"5"`                            // nolint:lll
+	MaxRetries      int               `long:"max-retries" description:"Max number of get errors tolerated before giving up" default:"5"`                      // nolint:lll
+	QueryID         int               `required:"true" short:"q" long:"query-id" description:"The ID of the query to execute"`                                // nolint:lll
+	QueryParameters map[string]string `required:"false" short:"p" long:"query-parameter" description:"Parameters to pass to the query in a key:value format"` // nolint:lll
 }
 
 // Parse parses all the supplied configurations when used as a CLI

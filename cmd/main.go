@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/duneanalytics/duneapi-client-go/config"
-	"github.com/duneanalytics/duneapi-client-go/http"
+	"github.com/duneanalytics/duneapi-client-go/dune"
 )
 
 func main() {
@@ -17,23 +18,15 @@ func main() {
 	}
 
 	// Submitting query for execution
-	executionResp, err := http.QueryExecute(cfg.Env, cfg.QueryID[0], cfg.QueryParameters)
+	client := dune.NewDuneClient(cfg.Env)
+	execution, err := client.RunQuery(cfg.QueryID, cfg.QueryParameters)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Failed to submit query for execution:", err)
-		os.Exit(1)
-	}
-	fmt.Fprintln(os.Stderr, "Submitted query for execution. ExecutionID:", executionResp.ExecutionID)
-
-	// Waiting for execution to finish
-	fmt.Fprintln(os.Stderr, "Waiting for execution to finish...")
-	_, err = http.WaitForCompletion(cfg.Env, executionResp.ExecutionID)
-	if err != nil {
+		fmt.Fprintln(os.Stderr, "Failed to run query:", err)
 		os.Exit(1)
 	}
 
-	// Get results
-	results, err := http.QueryResults(cfg.Env, executionResp.ExecutionID)
-	out, err := json.Marshal(results)
+	result, err := execution.WaitGetResults(time.Duration(cfg.PollInterval)*time.Second, cfg.MaxRetries)
+	out, err := json.Marshal(result)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Failed to encode result as json:", err)
 	}

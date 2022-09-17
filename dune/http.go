@@ -1,4 +1,4 @@
-package http
+package dune
 
 import (
 	"encoding/json"
