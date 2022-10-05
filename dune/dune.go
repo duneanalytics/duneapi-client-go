@@ -38,7 +38,7 @@ var executeURLTemplate = "https://%s/api/v1/query/%d/execute"
 var statusURLTemplate = "https://%s/api/v1/execution/%s/status"
 var resultsURLTemplate = "https://%s/api/v1/execution/%s/results"
 
-var ErrorRetriesExhausted = errors.New("Retries have been exhausted")
+var ErrorRetriesExhausted = errors.New("retries have been exhausted")
 
 // NewDuneClient instantiates a new stateless DuneAPI client. Env contains information about the
 // API key and target host (which shouldn't be changed, unless you want to run it through a custom proxy).
@@ -76,13 +76,13 @@ func (c *duneClient) RunQueryGetRows(queryID int, queryParameters map[string]str
 	return resp.Result.Rows, nil
 }
 
-func (d *duneClient) QueryCancel(executionID string) error {
-	cancelURL := fmt.Sprintf(cancelURLTemplate, d.env.Host, executionID)
+func (c *duneClient) QueryCancel(executionID string) error {
+	cancelURL := fmt.Sprintf(cancelURLTemplate, c.env.Host, executionID)
 	req, err := http.NewRequest("POST", cancelURL, nil)
 	if err != nil {
 		return err
 	}
-	resp, err := httpRequest(d.env.APIKey, req)
+	resp, err := httpRequest(c.env.APIKey, req)
 	if err != nil {
 		return err
 	}
@@ -120,13 +120,13 @@ func (c *duneClient) QueryExecute(queryID int, queryParameters map[string]string
 	return &executeResp, nil
 }
 
-func (d *duneClient) QueryStatus(executionID string) (*models.StatusResponse, error) {
-	statusURL := fmt.Sprintf(statusURLTemplate, d.env.Host, executionID)
+func (c *duneClient) QueryStatus(executionID string) (*models.StatusResponse, error) {
+	statusURL := fmt.Sprintf(statusURLTemplate, c.env.Host, executionID)
 	req, err := http.NewRequest("GET", statusURL, nil)
 	if err != nil {
 		return nil, err
 	}
-	resp, err := httpRequest(d.env.APIKey, req)
+	resp, err := httpRequest(c.env.APIKey, req)
 	if err != nil {
 		return nil, err
 	}
@@ -140,13 +140,13 @@ func (d *duneClient) QueryStatus(executionID string) (*models.StatusResponse, er
 	return &statusResp, nil
 }
 
-func (d *duneClient) QueryResults(executionID string) (*models.ResultsResponse, error) {
-	resultsURL := fmt.Sprintf(resultsURLTemplate, d.env.Host, executionID)
+func (c *duneClient) QueryResults(executionID string) (*models.ResultsResponse, error) {
+	resultsURL := fmt.Sprintf(resultsURLTemplate, c.env.Host, executionID)
 	req, err := http.NewRequest("GET", resultsURL, nil)
 	if err != nil {
 		return nil, err
 	}
-	resp, err := httpRequest(d.env.APIKey, req)
+	resp, err := httpRequest(c.env.APIKey, req)
 	if err != nil {
 		return nil, err
 	}

@@ -1,0 +1,17 @@
+---
+linters:
+  enable:
+    - goimports
+    - stylecheck
+    - lll
+  disable:
+    - errcheck
+
+run:
+  go: '1.19'
+
+issues:
+  exclude-rules:
+    - linters:
+        - lll
+      source: "// nolint:lll"

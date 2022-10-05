@@ -10,7 +10,7 @@ type CancelResponse struct {
 
 func (r CancelResponse) HasError() error {
 	if !r.Success {
-		return errors.New("Failed to cancel query execution")
+		return errors.New("failed to cancel query execution")
 	}
 
 	return nil
