@@ -2,13 +2,14 @@ package dune
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/duneanalytics/duneapi-client-go/models"
 )
 
 type execution struct {
-	client *duneClient
+	client DuneClient
 	ID     string
 }
 
@@ -28,6 +29,13 @@ type Execution interface {
 	WaitGetResults(pollInterval time.Duration, maxRetries int) (*models.ResultsResponse, error)
 }
 
+func NewExecution(client DuneClient, ID string) *execution {
+	return &execution{
+		client: client,
+		ID:     ID,
+	}
+}
+
 func (e *execution) Cancel() error {
 	return e.client.QueryCancel(e.ID)
 }
@@ -43,13 +51,14 @@ func (e *execution) GetResults() (*models.ResultsResponse, error) {
 func (e *execution) WaitGetResults(pollInterval time.Duration, maxRetries int) (*models.ResultsResponse, error) {
 	errCount := 0
 	for {
-		time.Sleep(pollInterval)
 		resultsResp, err := e.client.QueryResults(e.ID)
 		if err != nil {
 			if maxRetries != 0 && errCount > maxRetries {
 				return nil, fmt.Errorf("%w. %s", ErrorRetriesExhausted, err.Error())
 			}
+			fmt.Fprintln(os.Stderr, "failed to retrieve results. Retrying...\n", err)
 			errCount += 1
+			time.Sleep(pollInterval)
 			continue
 		}
 
@@ -57,6 +66,7 @@ func (e *execution) WaitGetResults(pollInterval time.Duration, maxRetries int) (
 		case "QUERY_STATE_COMPLETED", "QUERY_STATE_FAILED", "QUERY_STATE_CANCELLED":
 			return resultsResp, nil
 		default:
+			time.Sleep(pollInterval)
 			continue
 		}
 	}
