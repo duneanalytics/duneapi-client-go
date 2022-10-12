@@ -27,6 +27,8 @@ type Execution interface {
 	// if the Dune API is unreachable or returns an error. The pollInterval determines how long to wait between
 	// GetResult requests. It is recommended to set to at least 5 seconds to prevent rate-limiting.
 	WaitGetResults(pollInterval time.Duration, maxRetries int) (*models.ResultsResponse, error)
+	// GetID returns the execution ID
+	GetID() string
 }
 
 func NewExecution(client DuneClient, ID string) *execution {
@@ -70,4 +72,8 @@ func (e *execution) WaitGetResults(pollInterval time.Duration, maxRetries int) (
 			continue
 		}
 	}
+}
+
+func (e *execution) GetID() string {
+	return e.ID
 }
