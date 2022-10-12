@@ -9,7 +9,7 @@ type Query struct {
 
 type Env struct {
 	APIKey string `required:"true" long:"api-key" env:"DUNE_API_KEY" description:"Your Dune API key"`
-	Host   string `long:"host" env:"DUNE_API_HOST" description:"Dune API target host" default:"api.dune.com"`
+	Host   string `long:"host" env:"DUNE_API_HOST" description:"Dune API target host" default:"https://api.dune.com"`
 }
 
 type Params struct {

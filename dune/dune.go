@@ -33,10 +33,10 @@ type duneClient struct {
 	env config.Env
 }
 
-var cancelURLTemplate = "https://%s/api/v1/execution/%s/cancel"
-var executeURLTemplate = "https://%s/api/v1/query/%d/execute"
-var statusURLTemplate = "https://%s/api/v1/execution/%s/status"
-var resultsURLTemplate = "https://%s/api/v1/execution/%s/results"
+var cancelURLTemplate = "%s/api/v1/execution/%s/cancel"
+var executeURLTemplate = "%s/api/v1/query/%d/execute"
+var statusURLTemplate = "%s/api/v1/execution/%s/status"
+var resultsURLTemplate = "%s/api/v1/execution/%s/results"
 
 var ErrorRetriesExhausted = errors.New("retries have been exhausted")
 
