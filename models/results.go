@@ -13,6 +13,11 @@ type ResultMetadata struct {
 	TotalRowCount  int      `json:"total_row_count,omitempty"`
 }
 
+type Result struct {
+	Metadata ResultMetadata   `json:"metadata,omitempty"`
+	Rows     []map[string]any `json:"rows,omitempty"`
+}
+
 type ResultsResponse struct {
 	QueryID            int64      `json:"query_id"`
 	State              string     `json:"state"`
@@ -22,10 +27,7 @@ type ResultsResponse struct {
 	ExecutionEndedAt   *time.Time `json:"execution_ended_at,omitempty"`
 	CancelledAt        *time.Time `json:"cancelled_at,omitempty"`
 	Error              *any       `json:"error,omitempty"`
-	Result             *struct {
-		Metadata ResultMetadata   `json:"metadata,omitempty"`
-		Rows     []map[string]any `json:"rows,omitempty"`
-	} `json:"result,omitempty"`
+	Result             Result     `json:"result,omitempty"`
 }
 
 func (r ResultsResponse) HasError() error {
@@ -34,9 +36,6 @@ func (r ResultsResponse) HasError() error {
 	}
 
 	if r.State == "QUERY_STATE_COMPLETED" {
-		if r.Result == nil {
-			return errors.New("missing results.result")
-		}
 		if r.ExecutionEndedAt == nil {
 			return errors.New("missing execution endedAt")
 		}
@@ -53,7 +52,7 @@ func (r ResultsResponse) HasError() error {
 			)
 		}
 	} else {
-		if r.Result != nil {
+		if r.Result.Rows != nil {
 			return fmt.Errorf("cannot have result if state: %v", r.State)
 		}
 	}
