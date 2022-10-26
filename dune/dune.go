@@ -98,7 +98,9 @@ func (c *duneClient) QueryCancel(executionID string) error {
 
 func (c *duneClient) QueryExecute(queryID int, queryParameters map[string]string) (*models.ExecuteResponse, error) {
 	executeURL := fmt.Sprintf(executeURLTemplate, c.env.Host, queryID)
-	jsonData, err := json.Marshal(queryParameters)
+	jsonData, err := json.Marshal(models.ExecuteRequest{
+		QueryParameters: queryParameters,
+	})
 	if err != nil {
 		return nil, err
 	}
