@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+type ExecuteRequest struct {
+	QueryParameters map[string]string `json:"query_parameters,omitempty"`
+}
+
 type ExecuteResponse struct {
 	ExecutionID string `json:"execution_id,omitempty"`
 	State       string `json:"state,omitempty"`
