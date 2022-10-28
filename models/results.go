@@ -39,12 +39,6 @@ func (r ResultsResponse) HasError() error {
 		if r.ExecutionEndedAt == nil {
 			return errors.New("missing execution endedAt")
 		}
-		if len(r.Result.Metadata.ColumnNames) == 0 {
-			return errors.New("empty column names")
-		}
-		if r.Result.Metadata.ResultSetBytes == 0 {
-			return errors.New("impossible to have ResultSetBytes be 0")
-		}
 		if len(r.Result.Rows) != r.Result.Metadata.TotalRowCount {
 			return fmt.Errorf("missmatch row count: len(rows): %v, TotalRowCount: %v",
 				len(r.Result.Rows),
