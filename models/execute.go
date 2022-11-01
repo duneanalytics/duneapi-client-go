@@ -6,7 +6,7 @@ import (
 )
 
 type ExecuteRequest struct {
-	QueryParameters map[string]string `json:"query_parameters,omitempty"`
+	QueryParameters map[string]any `json:"query_parameters,omitempty"`
 }
 
 type ExecuteResponse struct {

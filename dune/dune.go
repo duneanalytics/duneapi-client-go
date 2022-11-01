@@ -15,14 +15,14 @@ import (
 // DuneClient represents all operations available to call externally
 type DuneClient interface {
 	// RunQueryGetRows submits a query for execution and returns an Execution object
-	RunQuery(queryID int, queryParameters map[string]string) (Execution, error)
+	RunQuery(queryID int, queryParameters map[string]any) (Execution, error)
 	// RunQueryGetRows submits a query for execution, blocks until execution is finished, and returns just the result rows
-	RunQueryGetRows(queryID int, queryParameters map[string]string) ([]map[string]any, error)
+	RunQueryGetRows(queryID int, queryParameters map[string]any) ([]map[string]any, error)
 
 	// QueryCancel cancels the execution of an execution in the pending or executing state
 	QueryCancel(executionID string) error
 	// QueryExecute submits a query to execute with the provided parameters
-	QueryExecute(queryID int, queryParameters map[string]string) (*models.ExecuteResponse, error)
+	QueryExecute(queryID int, queryParameters map[string]any) (*models.ExecuteResponse, error)
 	// QueryResults returns the results or status of an execution, depending on whether it has completed
 	QueryResults(executionID string) (*models.ResultsResponse, error)
 	// QueryStatus returns the current execution status
@@ -48,7 +48,7 @@ func NewDuneClient(env config.Env) *duneClient {
 	}
 }
 
-func (c *duneClient) RunQuery(queryID int, queryParameters map[string]string) (Execution, error) {
+func (c *duneClient) RunQuery(queryID int, queryParameters map[string]any) (Execution, error) {
 	resp, err := c.QueryExecute(queryID, queryParameters)
 	if err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func (c *duneClient) RunQuery(queryID int, queryParameters map[string]string) (E
 	}, nil
 }
 
-func (c *duneClient) RunQueryGetRows(queryID int, queryParameters map[string]string) ([]map[string]any, error) {
+func (c *duneClient) RunQueryGetRows(queryID int, queryParameters map[string]any) ([]map[string]any, error) {
 	execution, err := c.RunQuery(queryID, queryParameters)
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func (c *duneClient) QueryCancel(executionID string) error {
 	return nil
 }
 
-func (c *duneClient) QueryExecute(queryID int, queryParameters map[string]string) (*models.ExecuteResponse, error) {
+func (c *duneClient) QueryExecute(queryID int, queryParameters map[string]any) (*models.ExecuteResponse, error) {
 	executeURL := fmt.Sprintf(executeURLTemplate, c.env.Host, queryID)
 	jsonData, err := json.Marshal(models.ExecuteRequest{
 		QueryParameters: queryParameters,
