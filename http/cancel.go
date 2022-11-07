@@ -1,22 +1,20 @@
 package http
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
-	"github.com/duneanalytics/duneapi-client-go/config"
 	"github.com/duneanalytics/duneapi-client-go/models"
 )
 
-var cancelURLTemplate = "https://%s/api/v1/execution/%s/cancel"
-
-func QueryCancel(env config.Env, executionID string) (*models.CancelResponse, error) {
-	cancelURL := fmt.Sprintf(cancelURLTemplate, env.Host, executionID)
+func (e *Execution) Cancel(ctx context.Context) (*models.CancelResponse, error) {
+	cancelURL := fmt.Sprintf("%v/execution/%v/cancel", e.client.urlBase, e.ID)
 	req, err := http.NewRequest("POST", cancelURL, nil)
 	if err != nil {
 		return nil, err
 	}
-	resp, err := httpRequest(env.APIKey, req)
+	resp, err := e.client.Request(req)
 	if err != nil {
 		return nil, err
 	}

@@ -6,14 +6,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/duneanalytics/duneapi-client-go/config"
 	"github.com/duneanalytics/duneapi-client-go/models"
 )
 
 var executeURLTemplate = "https://%s/api/v1/query/%d/execute"
 
-func QueryExecute(env config.Env, queryID int, queryParameters map[string]string) (*models.ExecuteResponse, error) {
-	executeURL := fmt.Sprintf(executeURLTemplate, env.Host, queryID)
+func (c *client) QueryExecute(queryID int, queryParameters map[string]string) (*models.ExecuteResponse, error) {
+	executeURL := fmt.Sprintf("%v/api/v1/query/%d/execute", c.urlBase, queryID)
 	jsonData, err := json.Marshal(queryParameters)
 	if err != nil {
 		return nil, err
@@ -22,7 +21,7 @@ func QueryExecute(env config.Env, queryID int, queryParameters map[string]string
 	if err != nil {
 		return nil, err
 	}
-	resp, err := httpRequest(env.APIKey, req)
+	resp, err := c.Request(req)
 	if err != nil {
 		return nil, err
 	}

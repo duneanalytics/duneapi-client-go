@@ -11,6 +11,7 @@ type ResultMetadata struct {
 	ColumnNames    []string `json:"column_names,omitempty"`
 	ResultSetBytes int64    `json:"result_set_bytes,omitempty"`
 	TotalRowCount  int      `json:"total_row_count,omitempty"`
+	DatapointCount int
 }
 
 type ResultsResponse struct {
