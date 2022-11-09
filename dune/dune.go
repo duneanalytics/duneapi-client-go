@@ -30,7 +30,7 @@ type DuneClient interface {
 }
 
 type duneClient struct {
-	env config.Env
+	env *config.Env
 }
 
 var cancelURLTemplate = "%s/api/v1/execution/%s/cancel"
@@ -42,7 +42,7 @@ var ErrorRetriesExhausted = errors.New("retries have been exhausted")
 
 // NewDuneClient instantiates a new stateless DuneAPI client. Env contains information about the
 // API key and target host (which shouldn't be changed, unless you want to run it through a custom proxy).
-func NewDuneClient(env config.Env) *duneClient {
+func NewDuneClient(env *config.Env) *duneClient {
 	return &duneClient{
 		env: env,
 	}

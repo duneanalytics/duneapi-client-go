@@ -31,6 +31,9 @@ type Execution interface {
 	GetID() string
 }
 
+// NewExecution is used to instantiate a new execution object given an Dune client object
+// and existing execution ID. It is used to run further interactions with the execution, e.g.
+// retrieve its status, get results, cancel, etc.
 func NewExecution(client DuneClient, ID string) *execution {
 	return &execution{
 		client: client,
