@@ -9,38 +9,35 @@ To add this library to your go project run:
 go get github.com/duneanalytics/duneapi-client-go
 ```
 
-First you have to define the API key that will be used to authenticate with
-the Dune API. There are two ways to achieve this.
+First you have to define the configuration that will be used to authenticate
+with the Dune API. There are three ways to achieve this.
+
 
 ```go
 import (
 	"github.com/duneanalytics/duneapi-client-go/config"
-)
-
-func main() {
-	// Read API key from DUNE_API_KEY environment variable
-	env, err := config.ParseEnv()
-	if err != nil {
-		// Handle error
-	}
-
-	// Define it from your code
-	env = &config.Env{
-		APIKey: "Your_API_Key",
-		// optionally, you can define a different api domain to connect to
-		// Host: "https://duneapi.example.com",
-	}
-}
-```
-
-Next you can instantiate and use a Dune client object:
-
-```go
-import (
 	"github.com/duneanalytics/duneapi-client-go/dune"
 )
 
 func main() {
+	// Use one of the following options
+	// Read config from DUNE_API_KEY and DUNE_API_HOST environment variables
+	env, err := config.FromEnvVars()
+	if err != nil {
+		// handle error
+	}
+
+	// Define it from your code
+	env = config.FromAPIKey("Your_API_Key")
+
+	// Define manually
+	env = &config.Env{
+		APIKey: "Your_API_Key",
+		// you can define a different domain to connect to, for example for a mocked API
+		Host: "https://api.example.com",
+	}
+
+	// Next, instantiate and use a Dune client object
 	client := dune.NewDuneClient(env)
 	queryID := 1234
 	queryParameters := map[string]any{
