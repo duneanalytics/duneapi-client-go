@@ -1,38 +1,53 @@
 package config
 
 import (
-	flags "github.com/jessevdk/go-flags"
+	"fmt"
+	"os"
 )
 
-type Query struct {
-}
+const DefaultHost = "https://api.dune.com"
 
 type Env struct {
-	APIKey string `required:"true" long:"api-key" env:"DUNE_API_KEY" description:"Your Dune API key"`
-	Host   string `long:"host" env:"DUNE_API_HOST" description:"Dune API target host" default:"https://api.dune.com"`
+	APIKey string
+	Host   string
 }
 
-type Params struct {
-	Env             Env
-	PollInterval    int            `long:"poll-interval" description:"Interval in seconds for polling for results" default:"5"`                            // nolint:lll
-	MaxRetries      int            `long:"max-retries" description:"Max number of get errors tolerated before giving up" default:"5"`                      // nolint:lll
-	QueryID         int            `required:"false" short:"q" long:"query-id" description:"The ID of the query to execute"`                               // nolint:lll
-	QueryParameters map[string]any `required:"false" short:"p" long:"query-parameter" description:"Parameters to pass to the query in a key:value format"` // nolint:lll
-	ExecutionID     string         `required:"false" short:"e" long:"execution-id" description:"ID of an existing execution to check status"`              // nolint:lll
+func getenvOrDefault(key string, defaultValue string) string {
+	value, found := os.LookupEnv(key)
+	if found {
+		return value
+	}
+
+	return defaultValue
 }
 
-// Parse parses all the supplied configurations when used as a CLI
-func ParseConfig() (Params, error) {
-	var config Params
-	parser := flags.NewParser(&config, flags.Default)
-	_, err := parser.Parse()
-	return config, err
+func getenvOrError(key string) (string, error) {
+	value, found := os.LookupEnv(key)
+	if found {
+		return value, nil
+	}
+
+	return "", fmt.Errorf("environment variable %s must be set", key)
 }
 
-// ParseEnv parses environment variable config when used as a library
-func ParseEnv() (Env, error) {
-	var env Env
-	parser := flags.NewParser(&env, flags.Default)
-	_, err := parser.Parse()
-	return env, err
+// FromEnvVars populates the config from environment variables
+func FromEnvVars() (*Env, error) {
+	apiKey, err := getenvOrError("DUNE_API_KEY")
+	if err != nil {
+		return nil, err
+	}
+	host := getenvOrDefault("DUNE_API_HOST", DefaultHost)
+
+	return &Env{
+		APIKey: apiKey,
+		Host:   host,
+	}, nil
+}
+
+// FromAPIKey generates the config from a passed API key. Uses the default Host
+func FromAPIKey(apiKey string) *Env {
+	return &Env{
+		APIKey: apiKey,
+		Host:   DefaultHost,
+	}
 }
