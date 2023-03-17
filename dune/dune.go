@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -25,6 +26,8 @@ type DuneClient interface {
 	QueryExecute(queryID int, queryParameters map[string]any) (*models.ExecuteResponse, error)
 	// QueryResults returns the results or status of an execution, depending on whether it has completed
 	QueryResults(executionID string) (*models.ResultsResponse, error)
+	// QueryResultsCSV returns the results of an execution, as CSV text streamm if the execution has completed
+	QueryResultsCSV(executionID string) (io.Reader, error)
 	// QueryStatus returns the current execution status
 	QueryStatus(executionID string) (*models.StatusResponse, error)
 }
@@ -37,6 +40,7 @@ var cancelURLTemplate = "%s/api/v1/execution/%s/cancel"
 var executeURLTemplate = "%s/api/v1/query/%d/execute"
 var statusURLTemplate = "%s/api/v1/execution/%s/status"
 var resultsURLTemplate = "%s/api/v1/execution/%s/results"
+var resultsCSVURLTemplate = "%s/api/v1/execution/%s/results/csv"
 
 var ErrorRetriesExhausted = errors.New("retries have been exhausted")
 
@@ -160,4 +164,22 @@ func (c *duneClient) QueryResults(executionID string) (*models.ResultsResponse, 
 	}
 
 	return &resultsResp, nil
+}
+
+func (c *duneClient) QueryResultsCSV(executionID string) (io.Reader, error) {
+	resultsURL := fmt.Sprintf(resultsCSVURLTemplate, c.env.Host, executionID)
+	req, err := http.NewRequest("GET", resultsURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := httpRequest(c.env.APIKey, req)
+	if err != nil {
+		return nil, err
+	}
+
+	// we read whole result into ram here. if there was a paginated API we wouldn't need to
+	var buf bytes.Buffer
+	defer resp.Body.Close()
+	_, err = buf.ReadFrom(resp.Body)
+	return &buf, err
 }
