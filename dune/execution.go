@@ -2,6 +2,7 @@ package dune
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"time"
 
@@ -16,8 +17,10 @@ type execution struct {
 type Execution interface {
 	// QueryCancel cancels the execution
 	Cancel() error
-	// QueryResults returns the results or status of the execution, depending on whether it has completed
+	// GetResults returns the results or status of the execution, depending on whether it has completed
 	GetResults() (*models.ResultsResponse, error)
+	// GetResultsCSVStream returns the results in CSV format as an io.Stream
+	GetResultsCSV() (io.Reader, error)
 	// QueryStatus returns the current execution status
 	GetStatus() (*models.StatusResponse, error)
 	// RunQueryGetResults  blocks until the execution is finished and returns the result
@@ -51,6 +54,10 @@ func (e *execution) GetStatus() (*models.StatusResponse, error) {
 
 func (e *execution) GetResults() (*models.ResultsResponse, error) {
 	return e.client.QueryResults(e.ID)
+}
+
+func (e *execution) GetResultsCSV() (io.Reader, error) {
+	return e.client.QueryResultsCSV(e.ID)
 }
 
 func (e *execution) WaitGetResults(pollInterval time.Duration, maxRetries int) (*models.ResultsResponse, error) {
