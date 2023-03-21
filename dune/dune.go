@@ -26,7 +26,7 @@ type DuneClient interface {
 	QueryExecute(queryID int, queryParameters map[string]any) (*models.ExecuteResponse, error)
 	// QueryResults returns the results or status of an execution, depending on whether it has completed
 	QueryResults(executionID string) (*models.ResultsResponse, error)
-	// QueryResultsCSV returns the results of an execution, as CSV text streamm if the execution has completed
+	// QueryResultsCSV returns the results of an execution, as CSV text stream if the execution has completed
 	QueryResultsCSV(executionID string) (io.Reader, error)
 	// QueryStatus returns the current execution status
 	QueryStatus(executionID string) (*models.StatusResponse, error)
