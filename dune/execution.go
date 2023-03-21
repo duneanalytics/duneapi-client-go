@@ -19,7 +19,7 @@ type Execution interface {
 	Cancel() error
 	// GetResults returns the results or status of the execution, depending on whether it has completed
 	GetResults() (*models.ResultsResponse, error)
-	// GetResultsCSVStream returns the results in CSV format as an io.Stream
+	// GetResultsCSV returns the results in CSV format
 	GetResultsCSV() (io.Reader, error)
 	// QueryStatus returns the current execution status
 	GetStatus() (*models.StatusResponse, error)
