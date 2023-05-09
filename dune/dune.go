@@ -152,9 +152,8 @@ func (c *duneClient) QueryStatus(executionID string) (*models.StatusResponse, er
 	return &statusResp, nil
 }
 
-func (c *duneClient) QueryResults(executionID string) (*models.ResultsResponse, error) {
-	resultsURL := fmt.Sprintf(executionResultsURLTemplate, c.env.Host, executionID)
-	req, err := http.NewRequest("GET", resultsURL, nil)
+func (c *duneClient) getResults(url string) (*models.ResultsResponse, error) {
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -172,9 +171,8 @@ func (c *duneClient) QueryResults(executionID string) (*models.ResultsResponse, 
 	return &resultsResp, nil
 }
 
-func (c *duneClient) QueryResultsCSV(executionID string) (io.Reader, error) {
-	resultsURL := fmt.Sprintf(executionResultsCSVURLTemplate, c.env.Host, executionID)
-	req, err := http.NewRequest("GET", resultsURL, nil)
+func (c *duneClient) getResultsCSV(url string) (io.Reader, error) {
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -188,42 +186,24 @@ func (c *duneClient) QueryResultsCSV(executionID string) (io.Reader, error) {
 	defer resp.Body.Close()
 	_, err = buf.ReadFrom(resp.Body)
 	return &buf, err
+}
+
+func (c *duneClient) QueryResults(executionID string) (*models.ResultsResponse, error) {
+	url := fmt.Sprintf(executionResultsURLTemplate, c.env.Host, executionID)
+	return c.getResults(url)
 }
 
 func (c *duneClient) QueryResultsByQueryID(queryID string) (*models.ResultsResponse, error) {
-	resultsURL := fmt.Sprintf(queryResultsURLTemplate, c.env.Host, queryID)
-	req, err := http.NewRequest("GET", resultsURL, nil)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := httpRequest(c.env.APIKey, req)
-	if err != nil {
-		return nil, err
-	}
+	url := fmt.Sprintf(queryResultsURLTemplate, c.env.Host, queryID)
+	return c.getResults(url)
+}
 
-	var resultsResp models.ResultsResponse
-	decodeBody(resp, &resultsResp)
-	if err := resultsResp.HasError(); err != nil {
-		return nil, err
-	}
-
-	return &resultsResp, nil
+func (c *duneClient) QueryResultsCSV(executionID string) (io.Reader, error) {
+	url := fmt.Sprintf(executionResultsCSVURLTemplate, c.env.Host, executionID)
+	return c.getResultsCSV(url)
 }
 
 func (c *duneClient) QueryResultsCSVByQueryID(queryID string) (io.Reader, error) {
-	resultsURL := fmt.Sprintf(queryResultsCSVURLTemplate, c.env.Host, queryID)
-	req, err := http.NewRequest("GET", resultsURL, nil)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := httpRequest(c.env.APIKey, req)
-	if err != nil {
-		return nil, err
-	}
-
-	// we read whole result into ram here. if there was a paginated API we wouldn't need to
-	var buf bytes.Buffer
-	defer resp.Body.Close()
-	_, err = buf.ReadFrom(resp.Body)
-	return &buf, err
+	url := fmt.Sprintf(queryResultsCSVURLTemplate, c.env.Host, queryID)
+	return c.getResultsCSV(url)
 }
