@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -27,12 +28,13 @@ type DuneClient interface {
 	// QueryStatus returns the current execution status
 	QueryStatus(executionID string) (*models.StatusResponse, error)
 	// QueryResults returns the results or status of an execution, depending on whether it has completed
-	QueryResults(executionID string) (*models.ResultsResponse, error)
+	QueryResults(executionID string, options models.ResultOptions) (*models.ResultsResponse, error)
 	// QueryResultsCSV returns the results of an execution, as CSV text stream if the execution has completed
 	QueryResultsCSV(executionID string) (io.Reader, error)
 	// QueryResultsByQueryID returns the results of the lastest execution for a given query ID
 	QueryResultsByQueryID(queryID string) (*models.ResultsResponse, error)
-	// QueryResultsCSVByQueryID returns the results of the lastest execution for a given query ID, as CSV text stream if the execution has completed
+	// QueryResultsCSVByQueryID returns the results of the lastest execution for a given query ID
+	// as CSV text stream if the execution has completed
 	QueryResultsCSVByQueryID(queryID string) (io.Reader, error)
 }
 
@@ -40,13 +42,15 @@ type duneClient struct {
 	env *config.Env
 }
 
-var cancelURLTemplate = "%s/api/v1/execution/%s/cancel"
-var executeURLTemplate = "%s/api/v1/query/%d/execute"
-var statusURLTemplate = "%s/api/v1/execution/%s/status"
-var executionResultsURLTemplate = "%s/api/v1/execution/%s/results"
-var executionResultsCSVURLTemplate = "%s/api/v1/execution/%s/results/csv"
-var queryResultsURLTemplate = "%s/api/v1/query/%s/results"
-var queryResultsCSVURLTemplate = "%s/api/v1/query/%s/results/csv"
+var (
+	cancelURLTemplate              = "%s/api/v1/execution/%s/cancel"
+	executeURLTemplate             = "%s/api/v1/query/%d/execute"
+	statusURLTemplate              = "%s/api/v1/execution/%s/status"
+	executionResultsURLTemplate    = "%s/api/v1/execution/%s/results"
+	executionResultsCSVURLTemplate = "%s/api/v1/execution/%s/results/csv"
+	queryResultsURLTemplate        = "%s/api/v1/query/%s/results"
+	queryResultsCSVURLTemplate     = "%s/api/v1/query/%s/results/csv"
+)
 
 var ErrorRetriesExhausted = errors.New("retries have been exhausted")
 
@@ -152,23 +156,53 @@ func (c *duneClient) QueryStatus(executionID string) (*models.StatusResponse, er
 	return &statusResp, nil
 }
 
-func (c *duneClient) getResults(url string) (*models.ResultsResponse, error) {
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := httpRequest(c.env.APIKey, req)
-	if err != nil {
-		return nil, err
+func (c *duneClient) getResults(url string, options models.ResultOptions) (*models.ResultsResponse, error) {
+	var out models.ResultsResponse
+
+	// track if we have request for a single page
+	singlePage := options.Page != nil && (options.Page.Offset > 0 || options.Page.Limit > 0)
+
+	if options.Page == nil {
+		options.Page = &models.ResultPageOption{Limit: models.LimitRows}
 	}
 
-	var resultsResp models.ResultsResponse
-	decodeBody(resp, &resultsResp)
-	if err := resultsResp.HasError(); err != nil {
-		return nil, err
+	for {
+		url := fmt.Sprintf("%v?%v", url, options.ToURLValues().Encode())
+		slog.Info("GET", "url", url)
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := httpRequest(c.env.APIKey, req)
+		if err != nil {
+			return nil, err
+		}
+
+		var pageResp models.ResultsResponse
+		decodeBody(resp, &pageResp)
+		if err := pageResp.HasError(); err != nil {
+			return nil, err
+		}
+		if singlePage {
+			return &pageResp, nil
+		}
+		slog.Info("Page",
+			"next_offset", pageResp.NextOffset,
+			"IsEmpty", pageResp.IsEmpty(),
+			"state", pageResp.State,
+			"query_id", pageResp.QueryID,
+			"is_execution_finished", pageResp.IsExecutionFinished,
+			"metadata", fmt.Sprintf("%+v", pageResp.Result.Metadata),
+		)
+		out.AddPageResult(&pageResp)
+
+		if pageResp.NextOffset == nil {
+			break
+		}
+		options.Page.Offset = *pageResp.NextOffset
 	}
 
-	return &resultsResp, nil
+	return &out, nil
 }
 
 func (c *duneClient) getResultsCSV(url string) (io.Reader, error) {
@@ -188,14 +222,14 @@ func (c *duneClient) getResultsCSV(url string) (io.Reader, error) {
 	return &buf, err
 }
 
-func (c *duneClient) QueryResults(executionID string) (*models.ResultsResponse, error) {
+func (c *duneClient) QueryResults(executionID string, options models.ResultOptions) (*models.ResultsResponse, error) {
 	url := fmt.Sprintf(executionResultsURLTemplate, c.env.Host, executionID)
-	return c.getResults(url)
+	return c.getResults(url, options)
 }
 
 func (c *duneClient) QueryResultsByQueryID(queryID string) (*models.ResultsResponse, error) {
 	url := fmt.Sprintf(queryResultsURLTemplate, c.env.Host, queryID)
-	return c.getResults(url)
+	return c.getResults(url, models.ResultOptions{})
 }
 
 func (c *duneClient) QueryResultsCSV(executionID string) (io.Reader, error) {

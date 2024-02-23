@@ -23,6 +23,11 @@ type Execution interface {
 	GetResultsCSV() (io.Reader, error)
 	// QueryStatus returns the current execution status
 	GetStatus() (*models.StatusResponse, error)
+
+	// GetResultsV2 returns the results or status of the execution, depending on whether it has completed
+	// it uses options to refine futher what results to get
+	GetResultsV2(options models.ResultOptions) (*models.ResultsResponse, error)
+
 	// RunQueryGetResults  blocks until the execution is finished and returns the result
 	// maxRetries is used when using the RunQueryToCompletion method, to limit the number of times the method
 	// will tolerate API errors before giving up. A value of zero will disable the retry limit.
@@ -53,7 +58,11 @@ func (e *execution) GetStatus() (*models.StatusResponse, error) {
 }
 
 func (e *execution) GetResults() (*models.ResultsResponse, error) {
-	return e.client.QueryResults(e.ID)
+	return e.client.QueryResults(e.ID, models.ResultOptions{})
+}
+
+func (e *execution) GetResultsV2(opts models.ResultOptions) (*models.ResultsResponse, error) {
+	return e.client.QueryResults(e.ID, opts)
 }
 
 func (e *execution) GetResultsCSV() (io.Reader, error) {
@@ -63,24 +72,17 @@ func (e *execution) GetResultsCSV() (io.Reader, error) {
 func (e *execution) WaitGetResults(pollInterval time.Duration, maxRetries int) (*models.ResultsResponse, error) {
 	errCount := 0
 	for {
-		resultsResp, err := e.client.QueryResults(e.ID)
+		resultsResp, err := e.client.QueryResults(e.ID, models.ResultOptions{})
 		if err != nil {
 			if maxRetries != 0 && errCount > maxRetries {
 				return nil, fmt.Errorf("%w. %s", ErrorRetriesExhausted, err.Error())
 			}
 			fmt.Fprintln(os.Stderr, "failed to retrieve results. Retrying...\n", err)
 			errCount += 1
-			time.Sleep(pollInterval)
-			continue
-		}
-
-		switch resultsResp.State {
-		case "QUERY_STATE_COMPLETED", "QUERY_STATE_FAILED", "QUERY_STATE_CANCELLED":
+		} else if resultsResp.IsExecutionFinished {
 			return resultsResp, nil
-		default:
-			time.Sleep(pollInterval)
-			continue
 		}
+		time.Sleep(pollInterval)
 	}
 }
 
