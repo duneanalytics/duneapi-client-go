@@ -16,6 +16,12 @@ import (
 
 // DuneClient represents all operations available to call externally
 type DuneClient interface {
+	// New APIs to read results in a more flexible way
+	// returns the results or status of an execution, depending on whether it has completed
+	ResultsByExecutionID(executionID string, options models.ResultOptions) (*models.ResultsResponse, error)
+	// returns the results of a QueryID, depending on whether it has completed
+	ResultsByQueryID(queryID string, options models.ResultOptions) (*models.ResultsResponse, error)
+
 	// RunQueryGetRows submits a query for execution and returns an Execution object
 	RunQuery(queryID int, queryParameters map[string]any) (Execution, error)
 	// RunQueryGetRows submits a query for execution, blocks until execution is finished, and returns just the result rows
@@ -23,16 +29,24 @@ type DuneClient interface {
 
 	// QueryCancel cancels the execution of an execution in the pending or executing state
 	QueryCancel(executionID string) error
+
 	// QueryExecute submits a query to execute with the provided parameters
 	QueryExecute(queryID int, queryParameters map[string]any) (*models.ExecuteResponse, error)
+
 	// QueryStatus returns the current execution status
 	QueryStatus(executionID string) (*models.StatusResponse, error)
+
 	// QueryResults returns the results or status of an execution, depending on whether it has completed
-	QueryResults(executionID string, options models.ResultOptions) (*models.ResultsResponse, error)
+	// DEPRECATED, use ResultsByExecutionID instead
+	QueryResults(executionID string) (*models.ResultsResponse, error)
+
 	// QueryResultsCSV returns the results of an execution, as CSV text stream if the execution has completed
 	QueryResultsCSV(executionID string) (io.Reader, error)
+
 	// QueryResultsByQueryID returns the results of the lastest execution for a given query ID
+	// DEPRECATED, use ResultsByQueryID instead
 	QueryResultsByQueryID(queryID string) (*models.ResultsResponse, error)
+
 	// QueryResultsCSVByQueryID returns the results of the lastest execution for a given query ID
 	// as CSV text stream if the execution has completed
 	QueryResultsCSVByQueryID(queryID string) (io.Reader, error)
@@ -222,14 +236,22 @@ func (c *duneClient) getResultsCSV(url string) (io.Reader, error) {
 	return &buf, err
 }
 
-func (c *duneClient) QueryResults(executionID string, options models.ResultOptions) (*models.ResultsResponse, error) {
+func (c *duneClient) ResultsByExecutionID(executionID string, options models.ResultOptions) (*models.ResultsResponse, error) {
 	url := fmt.Sprintf(executionResultsURLTemplate, c.env.Host, executionID)
 	return c.getResults(url, options)
 }
 
-func (c *duneClient) QueryResultsByQueryID(queryID string) (*models.ResultsResponse, error) {
+func (c *duneClient) ResultsByQueryID(queryID string, options models.ResultOptions) (*models.ResultsResponse, error) {
 	url := fmt.Sprintf(queryResultsURLTemplate, c.env.Host, queryID)
-	return c.getResults(url, models.ResultOptions{})
+	return c.getResults(url, options)
+}
+
+func (c *duneClient) QueryResults(executionID string) (*models.ResultsResponse, error) {
+	return c.ResultsByExecutionID(executionID, models.ResultOptions{})
+}
+
+func (c *duneClient) QueryResultsByQueryID(queryID string) (*models.ResultsResponse, error) {
+	return c.ResultsByQueryID(queryID, models.ResultOptions{})
 }
 
 func (c *duneClient) QueryResultsCSV(executionID string) (io.Reader, error) {
