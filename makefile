@@ -10,8 +10,11 @@ dunecli: lint
 
 build: dunecli
 
-bin/golangci-lint:
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.50.0
+bin:
+	mkdir -p bin
+
+bin/golangci-lint: bin
+	GOBIN=$(PWD)/bin go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.56.2
 
 lint: bin/golangci-lint
 	go fmt ./...
@@ -20,5 +23,4 @@ lint: bin/golangci-lint
 	go mod tidy
 
 test:
-	go mod tidy
-	go test -timeout=10s -race -benchmem ./...
+	go test -timeout=10s -race -cover -bench=. -benchmem ./...
