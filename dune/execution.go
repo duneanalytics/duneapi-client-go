@@ -58,11 +58,11 @@ func (e *execution) GetStatus() (*models.StatusResponse, error) {
 }
 
 func (e *execution) GetResults() (*models.ResultsResponse, error) {
-	return e.client.QueryResults(e.ID, models.ResultOptions{})
+	return e.client.QueryResults(e.ID)
 }
 
 func (e *execution) GetResultsV2(opts models.ResultOptions) (*models.ResultsResponse, error) {
-	return e.client.QueryResults(e.ID, opts)
+	return e.client.QueryResultsV2(e.ID, opts)
 }
 
 func (e *execution) GetResultsCSV() (io.Reader, error) {
@@ -72,7 +72,7 @@ func (e *execution) GetResultsCSV() (io.Reader, error) {
 func (e *execution) WaitGetResults(pollInterval time.Duration, maxRetries int) (*models.ResultsResponse, error) {
 	errCount := 0
 	for {
-		resultsResp, err := e.client.QueryResults(e.ID, models.ResultOptions{})
+		resultsResp, err := e.client.QueryResultsV2(e.ID, models.ResultOptions{})
 		if err != nil {
 			if maxRetries != 0 && errCount > maxRetries {
 				return nil, fmt.Errorf("%w. %s", ErrorRetriesExhausted, err.Error())

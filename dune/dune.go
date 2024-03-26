@@ -18,7 +18,7 @@ import (
 type DuneClient interface {
 	// New APIs to read results in a more flexible way
 	// returns the results or status of an execution, depending on whether it has completed
-	ResultsByExecutionID(executionID string, options models.ResultOptions) (*models.ResultsResponse, error)
+	QueryResultsV2(executionID string, options models.ResultOptions) (*models.ResultsResponse, error)
 	// returns the results of a QueryID, depending on whether it has completed
 	ResultsByQueryID(queryID string, options models.ResultOptions) (*models.ResultsResponse, error)
 
@@ -37,7 +37,7 @@ type DuneClient interface {
 	QueryStatus(executionID string) (*models.StatusResponse, error)
 
 	// QueryResults returns the results or status of an execution, depending on whether it has completed
-	// DEPRECATED, use ResultsByExecutionID instead
+	// DEPRECATED, use QueryResultsV2 instead
 	QueryResults(executionID string) (*models.ResultsResponse, error)
 
 	// QueryResultsCSV returns the results of an execution, as CSV text stream if the execution has completed
@@ -236,7 +236,7 @@ func (c *duneClient) getResultsCSV(url string) (io.Reader, error) {
 	return &buf, err
 }
 
-func (c *duneClient) ResultsByExecutionID(executionID string, options models.ResultOptions) (*models.ResultsResponse, error) {
+func (c *duneClient) QueryResultsV2(executionID string, options models.ResultOptions) (*models.ResultsResponse, error) {
 	url := fmt.Sprintf(executionResultsURLTemplate, c.env.Host, executionID)
 	return c.getResults(url, options)
 }
@@ -247,7 +247,7 @@ func (c *duneClient) ResultsByQueryID(queryID string, options models.ResultOptio
 }
 
 func (c *duneClient) QueryResults(executionID string) (*models.ResultsResponse, error) {
-	return c.ResultsByExecutionID(executionID, models.ResultOptions{})
+	return c.QueryResultsV2(executionID, models.ResultOptions{})
 }
 
 func (c *duneClient) QueryResultsByQueryID(queryID string) (*models.ResultsResponse, error) {
