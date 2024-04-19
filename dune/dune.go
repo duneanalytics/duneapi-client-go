@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"time"
 
@@ -182,7 +181,6 @@ func (c *duneClient) getResults(url string, options models.ResultOptions) (*mode
 
 	for {
 		url := fmt.Sprintf("%v?%v", url, options.ToURLValues().Encode())
-		slog.Info("GET", "url", url)
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			return nil, err
@@ -200,14 +198,6 @@ func (c *duneClient) getResults(url string, options models.ResultOptions) (*mode
 		if singlePage {
 			return &pageResp, nil
 		}
-		slog.Info("Page",
-			"next_offset", pageResp.NextOffset,
-			"IsEmpty", pageResp.IsEmpty(),
-			"state", pageResp.State,
-			"query_id", pageResp.QueryID,
-			"is_execution_finished", pageResp.IsExecutionFinished,
-			"metadata", fmt.Sprintf("%+v", pageResp.Result.Metadata),
-		)
 		out.AddPageResult(&pageResp)
 
 		if pageResp.NextOffset == nil {
