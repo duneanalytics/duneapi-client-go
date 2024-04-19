@@ -14,7 +14,7 @@ bin:
 	mkdir -p bin
 
 bin/golangci-lint: bin
-	GOBIN=$(PWD)/bin go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.56.2
+	GOBIN=$(PWD)/bin go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.57.2
 
 lint: bin/golangci-lint
 	go fmt ./...
