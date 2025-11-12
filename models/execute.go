@@ -9,6 +9,11 @@ type ExecuteRequest struct {
 	QueryParameters map[string]any `json:"query_parameters,omitempty"`
 }
 
+type ExecuteSQLRequest struct {
+	SQL         string `json:"sql"`
+	Performance string `json:"performance,omitempty"`
+}
+
 type ExecuteResponse struct {
 	ExecutionID string `json:"execution_id,omitempty"`
 	State       string `json:"state,omitempty"`
