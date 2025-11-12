@@ -32,6 +32,12 @@ type DuneClient interface {
 	// QueryExecute submits a query to execute with the provided parameters
 	QueryExecute(queryID int, queryParameters map[string]any) (*models.ExecuteResponse, error)
 
+	// SQLExecute executes raw SQL with optional performance parameter
+	SQLExecute(sql string, performance string) (*models.ExecuteResponse, error)
+
+	// RunSQL submits raw SQL for execution and returns an Execution object
+	RunSQL(sql string, performance string) (Execution, error)
+
 	// QueryStatus returns the current execution status
 	QueryStatus(executionID string) (*models.StatusResponse, error)
 
@@ -49,6 +55,12 @@ type DuneClient interface {
 	// QueryResultsCSVByQueryID returns the results of the lastest execution for a given query ID
 	// as CSV text stream if the execution has completed
 	QueryResultsCSVByQueryID(queryID string) (io.Reader, error)
+
+	// GetUsage returns usage statistics for the current billing period
+	GetUsage() (*models.UsageResponse, error)
+
+	// GetUsageForDates returns usage statistics for a specified time range
+	GetUsageForDates(startDate, endDate string) (*models.UsageResponse, error)
 }
 
 type duneClient struct {
@@ -58,11 +70,13 @@ type duneClient struct {
 var (
 	cancelURLTemplate              = "%s/api/v1/execution/%s/cancel"
 	executeURLTemplate             = "%s/api/v1/query/%d/execute"
+	sqlExecuteURLTemplate          = "%s/api/v1/sql/execute"
 	statusURLTemplate              = "%s/api/v1/execution/%s/status"
 	executionResultsURLTemplate    = "%s/api/v1/execution/%s/results"
 	executionResultsCSVURLTemplate = "%s/api/v1/execution/%s/results/csv"
 	queryResultsURLTemplate        = "%s/api/v1/query/%s/results"
 	queryResultsCSVURLTemplate     = "%s/api/v1/query/%s/results/csv"
+	usageURLTemplate               = "%s/api/v1/usage"
 )
 
 var ErrorRetriesExhausted = errors.New("retries have been exhausted")
@@ -77,6 +91,18 @@ func NewDuneClient(env *config.Env) *duneClient {
 
 func (c *duneClient) RunQuery(queryID int, queryParameters map[string]any) (Execution, error) {
 	resp, err := c.QueryExecute(queryID, queryParameters)
+	if err != nil {
+		return nil, err
+	}
+
+	return &execution{
+		client: c,
+		ID:     resp.ExecutionID,
+	}, nil
+}
+
+func (c *duneClient) RunSQL(sql string, performance string) (Execution, error) {
+	resp, err := c.SQLExecute(sql, performance)
 	if err != nil {
 		return nil, err
 	}
@@ -135,6 +161,35 @@ func (c *duneClient) QueryExecute(queryID int, queryParameters map[string]any) (
 	if err != nil {
 		return nil, err
 	}
+	resp, err := httpRequest(c.env.APIKey, req)
+	if err != nil {
+		return nil, err
+	}
+
+	var executeResp models.ExecuteResponse
+	decodeBody(resp, &executeResp)
+	if err := executeResp.HasError(); err != nil {
+		return nil, err
+	}
+
+	return &executeResp, nil
+}
+
+func (c *duneClient) SQLExecute(sql string, performance string) (*models.ExecuteResponse, error) {
+	executeURL := fmt.Sprintf(sqlExecuteURLTemplate, c.env.Host)
+	jsonData, err := json.Marshal(models.ExecuteSQLRequest{
+		SQL:         sql,
+		Performance: performance,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", executeURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, err
+	}
+	
 	resp, err := httpRequest(c.env.APIKey, req)
 	if err != nil {
 		return nil, err
@@ -252,4 +307,39 @@ func (c *duneClient) QueryResultsCSV(executionID string) (io.Reader, error) {
 func (c *duneClient) QueryResultsCSVByQueryID(queryID string) (io.Reader, error) {
 	url := fmt.Sprintf(queryResultsCSVURLTemplate, c.env.Host, queryID)
 	return c.getResultsCSV(url)
+}
+
+func (c *duneClient) GetUsage() (*models.UsageResponse, error) {
+	return c.getUsage(nil, nil)
+}
+
+func (c *duneClient) GetUsageForDates(startDate, endDate string) (*models.UsageResponse, error) {
+	return c.getUsage(&startDate, &endDate)
+}
+
+func (c *duneClient) getUsage(startDate, endDate *string) (*models.UsageResponse, error) {
+	usageURL := fmt.Sprintf(usageURLTemplate, c.env.Host)
+	
+	jsonData, err := json.Marshal(models.UsageRequest{
+		StartDate: startDate,
+		EndDate:   endDate,
+	})
+	if err != nil {
+		return nil, err
+	}
+	
+	req, err := http.NewRequest("POST", usageURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, err
+	}
+	
+	resp, err := httpRequest(c.env.APIKey, req)
+	if err != nil {
+		return nil, err
+	}
+
+	var usageResp models.UsageResponse
+	decodeBody(resp, &usageResp)
+
+	return &usageResp, nil
 }
