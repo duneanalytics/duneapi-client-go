@@ -35,6 +35,12 @@ type DuneClient interface {
 	// SQLExecute executes raw SQL with optional performance parameter
 	SQLExecute(sql string, performance string) (*models.ExecuteResponse, error)
 
+	// QueryPipelineExecute submits a query pipeline for execution with optional performance parameter
+	QueryPipelineExecute(queryID string, performance string) (*models.PipelineExecuteResponse, error)
+
+	// PipelineStatus returns the current pipeline execution status
+	PipelineStatus(pipelineExecutionID string) (*models.PipelineStatusResponse, error)
+
 	// RunSQL submits raw SQL for execution and returns an Execution object
 	RunSQL(sql string, performance string) (Execution, error)
 
@@ -71,6 +77,8 @@ var (
 	cancelURLTemplate              = "%s/api/v1/execution/%s/cancel"
 	executeURLTemplate             = "%s/api/v1/query/%d/execute"
 	sqlExecuteURLTemplate          = "%s/api/v1/sql/execute"
+	pipelineExecuteURLTemplate     = "%s/api/v1/query/%s/pipeline/execute"
+	pipelineStatusURLTemplate      = "%s/api/v1/pipelines/executions/%s/status"
 	statusURLTemplate              = "%s/api/v1/execution/%s/status"
 	executionResultsURLTemplate    = "%s/api/v1/execution/%s/results"
 	executionResultsCSVURLTemplate = "%s/api/v1/execution/%s/results/csv"
@@ -202,6 +210,48 @@ func (c *duneClient) SQLExecute(sql string, performance string) (*models.Execute
 	}
 
 	return &executeResp, nil
+}
+
+func (c *duneClient) QueryPipelineExecute(queryID string, performance string) (*models.PipelineExecuteResponse, error) {
+	executeURL := fmt.Sprintf(pipelineExecuteURLTemplate, c.env.Host, queryID)
+	jsonData, err := json.Marshal(models.PipelineExecuteRequest{
+		Performance: performance,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", executeURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := httpRequest(c.env.APIKey, req)
+	if err != nil {
+		return nil, err
+	}
+
+	var pipelineResp models.PipelineExecuteResponse
+	decodeBody(resp, &pipelineResp)
+
+	return &pipelineResp, nil
+}
+
+func (c *duneClient) PipelineStatus(pipelineExecutionID string) (*models.PipelineStatusResponse, error) {
+	statusURL := fmt.Sprintf(pipelineStatusURLTemplate, c.env.Host, pipelineExecutionID)
+	req, err := http.NewRequest("GET", statusURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := httpRequest(c.env.APIKey, req)
+	if err != nil {
+		return nil, err
+	}
+
+	var pipelineStatusResp models.PipelineStatusResponse
+	decodeBody(resp, &pipelineStatusResp)
+
+	return &pipelineStatusResp, nil
 }
 
 func (c *duneClient) QueryStatus(executionID string) (*models.StatusResponse, error) {

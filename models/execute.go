@@ -29,3 +29,11 @@ func (e ExecuteResponse) HasError() error {
 	}
 	return nil
 }
+
+type PipelineExecuteRequest struct {
+	Performance string `json:"performance,omitempty"`
+}
+
+type PipelineExecuteResponse struct {
+	PipelineExecutionID string `json:"pipeline_execution_id,omitempty"`
+}
