@@ -26,18 +26,18 @@ type Result struct {
 }
 
 type ResultsResponse struct {
-	QueryID             int64            `json:"query_id"`
-	State               string           `json:"state"`
-	SubmittedAt         time.Time        `json:"submitted_at"`
-	ExpiresAt           time.Time        `json:"expires_at"`
-	ExecutionStartedAt  *time.Time       `json:"execution_started_at,omitempty"`
-	ExecutionEndedAt    *time.Time       `json:"execution_ended_at,omitempty"`
-	CancelledAt         *time.Time       `json:"cancelled_at,omitempty"`
-	Error               *ExecutionError  `json:"error,omitempty"`
-	Result              Result           `json:"result,omitempty"`
-	NextOffset          *uint64          `json:"next_offset,omitempty"`
-	NextURI             *string          `json:"next_uri,omitempty"`
-	IsExecutionFinished bool             `json:"is_execution_finished,omitempty"`
+	QueryID             int64           `json:"query_id"`
+	State               string          `json:"state"`
+	SubmittedAt         time.Time       `json:"submitted_at"`
+	ExpiresAt           time.Time       `json:"expires_at"`
+	ExecutionStartedAt  *time.Time      `json:"execution_started_at,omitempty"`
+	ExecutionEndedAt    *time.Time      `json:"execution_ended_at,omitempty"`
+	CancelledAt         *time.Time      `json:"cancelled_at,omitempty"`
+	Error               *ExecutionError `json:"error,omitempty"`
+	Result              Result          `json:"result,omitempty"`
+	NextOffset          *uint64         `json:"next_offset,omitempty"`
+	NextURI             *string         `json:"next_uri,omitempty"`
+	IsExecutionFinished bool            `json:"is_execution_finished,omitempty"`
 }
 
 func (r ResultsResponse) HasError() error {

@@ -28,4 +28,3 @@ func (p *pipeline) GetStatus() (*models.PipelineStatusResponse, error) {
 func (p *pipeline) GetID() string {
 	return p.ID
 }
-
