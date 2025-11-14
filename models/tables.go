@@ -76,52 +76,51 @@ type CSVUploadRequest struct {
 }
 
 type CSVUploadResponse struct {
-	TableName    string `json:"table_name"`
-	FullName     string `json:"full_name"`
-	ExampleQuery string `json:"example_query"`
+	Success   bool   `json:"success"`
+	TableName string `json:"table_name"`
 }
 
 func (c CSVUploadResponse) HasError() error {
+	if !c.Success {
+		return fmt.Errorf("CSV upload failed")
+	}
 	if c.TableName == "" {
 		return fmt.Errorf("missing table_name")
-	}
-	if c.FullName == "" {
-		return fmt.Errorf("missing full_name")
 	}
 	return nil
 }
 
 type TableInsertResponse struct {
-	BytesWritten int64  `json:"bytes_written"`
+	Name         string `json:"name"`
 	RowsWritten  int64  `json:"rows_written"`
-	TableName    string `json:"table_name"`
+	BytesWritten int64  `json:"bytes_written"`
 }
 
 func (t TableInsertResponse) HasError() error {
-	if t.TableName == "" {
-		return fmt.Errorf("missing table_name")
+	if t.Name == "" {
+		return fmt.Errorf("missing name")
 	}
 	return nil
 }
 
 type TableDeleteResponse struct {
-	Success bool `json:"success"`
+	Message string `json:"message"`
 }
 
 func (t TableDeleteResponse) HasError() error {
-	if !t.Success {
-		return fmt.Errorf("table deletion failed")
+	if t.Message == "" {
+		return fmt.Errorf("missing message")
 	}
 	return nil
 }
 
 type TableClearResponse struct {
-	Success bool `json:"success"`
+	Message string `json:"message"`
 }
 
 func (t TableClearResponse) HasError() error {
-	if !t.Success {
-		return fmt.Errorf("table clear failed")
+	if t.Message == "" {
+		return fmt.Errorf("missing message")
 	}
 	return nil
 }

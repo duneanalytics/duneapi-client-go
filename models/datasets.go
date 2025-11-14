@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"time"
 )
 
 type DatasetColumn struct {
@@ -19,31 +18,22 @@ type DatasetOwner struct {
 }
 
 type DatasetResponse struct {
-	Slug        string          `json:"slug"`
-	Name        string          `json:"name"`
-	Namespace   string          `json:"namespace"`
-	TableName   string          `json:"table_name"`
-	Type        string          `json:"type"`
-	Columns     []DatasetColumn `json:"columns"`
-	Owner       DatasetOwner    `json:"owner"`
-	IsPrivate   bool            `json:"is_private"`
-	CreatedAt   time.Time       `json:"created_at"`
-	UpdatedAt   time.Time       `json:"updated_at"`
-	Description string          `json:"description,omitempty"`
+	Type       string           `json:"type"`
+	FullName   string           `json:"full_name"`
+	IsPrivate  bool             `json:"is_private"`
+	Columns    []DatasetColumn  `json:"columns"`
+	Owner      *DatasetOwner    `json:"owner"`
+	Metadata   map[string]any   `json:"metadata,omitempty"`
+	CreatedAt  string           `json:"created_at"`
+	UpdatedAt  string           `json:"updated_at"`
 }
 
 func (d DatasetResponse) HasError() error {
-	if d.Slug == "" {
-		return fmt.Errorf("missing dataset slug")
+	if d.FullName == "" {
+		return fmt.Errorf("missing full_name")
 	}
-	if d.Namespace == "" {
-		return fmt.Errorf("missing namespace")
-	}
-	if d.TableName == "" {
-		return fmt.Errorf("missing table_name")
-	}
-	if d.Owner.Handle == "" {
-		return fmt.Errorf("missing owner handle")
+	if d.Type == "" {
+		return fmt.Errorf("missing type")
 	}
 	return nil
 }
