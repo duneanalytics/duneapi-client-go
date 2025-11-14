@@ -13,9 +13,9 @@ type BillingPeriod struct {
 }
 
 type UsageResponse struct {
-	PrivateQueries     int             `json:"private_queries"`
-	PrivateDashboards  int             `json:"private_dashboards"`
-	BytesUsed          int64           `json:"bytes_used"`
-	BytesAllowed       int64           `json:"bytes_allowed"`
-	BillingPeriods     []BillingPeriod `json:"billing_periods"`
+	PrivateQueries    int             `json:"private_queries"`
+	PrivateDashboards int             `json:"private_dashboards"`
+	BytesUsed         int64           `json:"bytes_used"`
+	BytesAllowed      int64           `json:"bytes_allowed"`
+	BillingPeriods    []BillingPeriod `json:"billing_periods"`
 }

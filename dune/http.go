@@ -29,7 +29,7 @@ func httpRequest(apiKey string, req *http.Request) (*http.Response, error) {
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		defer resp.Body.Close()
 		var errorResponse ErrorResponse
 		err := json.NewDecoder(resp.Body).Decode(&errorResponse)
