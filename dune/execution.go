@@ -3,7 +3,6 @@ package dune
 import (
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	"github.com/duneanalytics/duneapi-client-go/models"
@@ -70,16 +69,20 @@ func (e *execution) GetResultsCSV() (io.Reader, error) {
 }
 
 func (e *execution) WaitGetResults(pollInterval time.Duration, maxRetries int) (*models.ResultsResponse, error) {
-	errCount := 0
+	errAttempts := 0
 	for {
 		resultsResp, err := e.client.QueryResultsV2(e.ID, models.ResultOptions{})
 		if err != nil {
-			if maxRetries != 0 && errCount > maxRetries {
+			errAttempts++
+			if maxRetries != 0 && errAttempts >= maxRetries {
 				return nil, fmt.Errorf("%w. %s", ErrorRetriesExhausted, err.Error())
 			}
-			fmt.Fprintln(os.Stderr, "failed to retrieve results. Retrying...\n", err)
-			errCount += 1
-		} else if resultsResp.IsExecutionFinished {
+			sleep := nextBackoff(errAttempts, defaultRetryPolicy)
+			time.Sleep(sleep)
+			continue
+		}
+		errAttempts = 0
+		if resultsResp.IsExecutionFinished {
 			return resultsResp, nil
 		}
 		time.Sleep(pollInterval)
