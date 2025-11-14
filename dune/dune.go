@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/duneanalytics/duneapi-client-go/config"
@@ -457,10 +458,10 @@ func (c *duneClient) ListDatasets(
 
 	params := fmt.Sprintf("?limit=%d&offset=%d", limit, offset)
 	if ownerHandle != "" {
-		params += fmt.Sprintf("&owner_handle=%s", ownerHandle)
+		params += fmt.Sprintf("&owner_handle=%s", url.QueryEscape(ownerHandle))
 	}
 	if datasetType != "" {
-		params += fmt.Sprintf("&type=%s", datasetType)
+		params += fmt.Sprintf("&type=%s", url.QueryEscape(datasetType))
 	}
 
 	req, err := http.NewRequest("GET", listURL+params, nil)
@@ -583,7 +584,7 @@ func (c *duneClient) UploadCSV(req models.CSVUploadRequest) (*models.CSVUploadRe
 }
 
 func (c *duneClient) DeleteTable(namespace, tableName string) (*models.TableDeleteResponse, error) {
-	deleteURL := fmt.Sprintf(deleteTableURLTemplate, c.env.Host, namespace, tableName)
+	deleteURL := fmt.Sprintf(deleteTableURLTemplate, c.env.Host, url.PathEscape(namespace), url.PathEscape(tableName))
 
 	req, err := http.NewRequest("DELETE", deleteURL, nil)
 	if err != nil {
@@ -605,7 +606,7 @@ func (c *duneClient) DeleteTable(namespace, tableName string) (*models.TableDele
 }
 
 func (c *duneClient) ClearTable(namespace, tableName string) (*models.TableClearResponse, error) {
-	clearURL := fmt.Sprintf(clearTableURLTemplate, c.env.Host, namespace, tableName)
+	clearURL := fmt.Sprintf(clearTableURLTemplate, c.env.Host, url.PathEscape(namespace), url.PathEscape(tableName))
 
 	req, err := http.NewRequest("POST", clearURL, nil)
 	if err != nil {
@@ -627,7 +628,7 @@ func (c *duneClient) ClearTable(namespace, tableName string) (*models.TableClear
 }
 
 func (c *duneClient) InsertTable(namespace, tableName, data, contentType string) (*models.TableInsertResponse, error) {
-	insertURL := fmt.Sprintf(insertTableURLTemplate, c.env.Host, namespace, tableName)
+	insertURL := fmt.Sprintf(insertTableURLTemplate, c.env.Host, url.PathEscape(namespace), url.PathEscape(tableName))
 
 	req, err := http.NewRequest("POST", insertURL, bytes.NewBufferString(data))
 	if err != nil {
@@ -729,7 +730,7 @@ func (c *duneClient) UploadCSVDeprecated(req models.CSVUploadRequest) (*models.C
 }
 
 func (c *duneClient) DeleteTableDeprecated(namespace, tableName string) (*models.TableDeleteResponse, error) {
-	deleteURL := fmt.Sprintf(deleteTableDeprecatedURLTemplate, c.env.Host, namespace, tableName)
+	deleteURL := fmt.Sprintf(deleteTableDeprecatedURLTemplate, c.env.Host, url.PathEscape(namespace), url.PathEscape(tableName))
 
 	req, err := http.NewRequest("DELETE", deleteURL, nil)
 	if err != nil {
@@ -775,7 +776,7 @@ func (c *duneClient) ClearTableDeprecated(namespace, tableName string) (*models.
 func (c *duneClient) InsertTableDeprecated(
 	namespace, tableName, data, contentType string,
 ) (*models.TableInsertResponse, error) {
-	insertURL := fmt.Sprintf(insertTableDeprecatedURLTemplate, c.env.Host, namespace, tableName)
+	insertURL := fmt.Sprintf(insertTableDeprecatedURLTemplate, c.env.Host, url.PathEscape(namespace), url.PathEscape(tableName))
 
 	req, err := http.NewRequest("POST", insertURL, bytes.NewBufferString(data))
 	if err != nil {
