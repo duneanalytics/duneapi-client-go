@@ -76,40 +76,40 @@ type DuneClient interface {
 	GetDataset(slug string) (*models.DatasetResponse, error)
 
 	// ListUploads returns a paginated list of uploaded tables
-	ListUploads(limit, offset int) (*models.TableListResponse, error)
+	ListUploads(limit, offset int) (*models.UploadsListResponse, error)
 
-	// CreateTable creates an empty table with defined schema
-	CreateTable(req models.TableCreateRequest) (*models.TableCreateResponse, error)
+	// CreateUpload creates an empty table with defined schema
+	CreateUpload(req models.UploadsCreateRequest) (*models.UploadsCreateResponse, error)
 
 	// UploadCSV uploads CSV data to create a new table
-	UploadCSV(req models.CSVUploadRequest) (*models.CSVUploadResponse, error)
+	UploadCSV(req models.UploadsCSVRequest) (*models.UploadsCSVResponse, error)
 
-	// DeleteTable permanently deletes a table and all its data
-	DeleteTable(namespace, tableName string) (*models.TableDeleteResponse, error)
+	// DeleteUpload permanently deletes a table and all its data
+	DeleteUpload(namespace, tableName string) (*models.UploadsDeleteResponse, error)
 
-	// ClearTable removes all data from a table while preserving schema
-	ClearTable(namespace, tableName string) (*models.TableClearResponse, error)
+	// ClearUpload removes all data from a table while preserving schema
+	ClearUpload(namespace, tableName string) (*models.UploadsClearResponse, error)
 
-	// InsertTable inserts data into an existing table (CSV or NDJSON format)
-	InsertTable(namespace, tableName, data, contentType string) (*models.TableInsertResponse, error)
+	// InsertIntoUpload inserts data into an existing table (CSV or NDJSON format)
+	InsertIntoUpload(namespace, tableName, data, contentType string) (*models.UploadsInsertResponse, error)
 
 	// DEPRECATED: Use ListUploads instead. Will be removed March 1, 2026.
-	ListTablesDeprecated(limit, offset int) (*models.TableListResponse, error)
+	ListTables(limit, offset int) (*models.UploadsListResponse, error)
 
-	// DEPRECATED: Use CreateTable instead. Will be removed March 1, 2026.
-	CreateTableDeprecated(req models.TableCreateRequest) (*models.TableCreateResponse, error)
+	// DEPRECATED: Use CreateUpload instead. Will be removed March 1, 2026.
+	CreateTable(req models.UploadsCreateRequest) (*models.UploadsCreateResponse, error)
 
 	// DEPRECATED: Use UploadCSV instead. Will be removed March 1, 2026.
-	UploadCSVDeprecated(req models.CSVUploadRequest) (*models.CSVUploadResponse, error)
+	UploadCSVDeprecated(req models.UploadsCSVRequest) (*models.UploadsCSVResponse, error)
 
-	// DEPRECATED: Use DeleteTable instead. Will be removed March 1, 2026.
-	DeleteTableDeprecated(namespace, tableName string) (*models.TableDeleteResponse, error)
+	// DEPRECATED: Use DeleteUpload instead. Will be removed March 1, 2026.
+	DeleteTable(namespace, tableName string) (*models.UploadsDeleteResponse, error)
 
-	// DEPRECATED: Use ClearTable instead. Will be removed March 1, 2026.
-	ClearTableDeprecated(namespace, tableName string) (*models.TableClearResponse, error)
+	// DEPRECATED: Use ClearUpload instead. Will be removed March 1, 2026.
+	ClearTable(namespace, tableName string) (*models.UploadsClearResponse, error)
 
-	// DEPRECATED: Use InsertTable instead. Will be removed March 1, 2026.
-	InsertTableDeprecated(namespace, tableName, data, contentType string) (*models.TableInsertResponse, error)
+	// DEPRECATED: Use InsertIntoUpload instead. Will be removed March 1, 2026.
+	InsertTable(namespace, tableName, data, contentType string) (*models.UploadsInsertResponse, error)
 }
 
 type duneClient struct {
@@ -505,7 +505,7 @@ func (c *duneClient) GetDataset(slug string) (*models.DatasetResponse, error) {
 	return &datasetResp, nil
 }
 
-func (c *duneClient) ListUploads(limit, offset int) (*models.TableListResponse, error) {
+func (c *duneClient) ListUploads(limit, offset int) (*models.UploadsListResponse, error) {
 	listURL := fmt.Sprintf(listUploadsURLTemplate, c.env.Host)
 
 	params := fmt.Sprintf("?limit=%d&offset=%d", limit, offset)
@@ -520,16 +520,13 @@ func (c *duneClient) ListUploads(limit, offset int) (*models.TableListResponse, 
 		return nil, err
 	}
 
-	var tablesResp models.TableListResponse
-	decodeBody(resp, &tablesResp)
-	if err := tablesResp.HasError(); err != nil {
-		return nil, err
-	}
+	var uploadsResp models.UploadsListResponse
+	decodeBody(resp, &uploadsResp)
 
-	return &tablesResp, nil
+	return &uploadsResp, nil
 }
 
-func (c *duneClient) CreateTable(req models.TableCreateRequest) (*models.TableCreateResponse, error) {
+func (c *duneClient) CreateUpload(req models.UploadsCreateRequest) (*models.UploadsCreateResponse, error) {
 	createURL := fmt.Sprintf(createTableURLTemplate, c.env.Host)
 
 	jsonData, err := json.Marshal(req)
@@ -547,16 +544,13 @@ func (c *duneClient) CreateTable(req models.TableCreateRequest) (*models.TableCr
 		return nil, err
 	}
 
-	var createResp models.TableCreateResponse
+	var createResp models.UploadsCreateResponse
 	decodeBody(resp, &createResp)
-	if err := createResp.HasError(); err != nil {
-		return nil, err
-	}
 
 	return &createResp, nil
 }
 
-func (c *duneClient) UploadCSV(req models.CSVUploadRequest) (*models.CSVUploadResponse, error) {
+func (c *duneClient) UploadCSV(req models.UploadsCSVRequest) (*models.UploadsCSVResponse, error) {
 	uploadURL := fmt.Sprintf(uploadCSVURLTemplate, c.env.Host)
 
 	jsonData, err := json.Marshal(req)
@@ -574,16 +568,13 @@ func (c *duneClient) UploadCSV(req models.CSVUploadRequest) (*models.CSVUploadRe
 		return nil, err
 	}
 
-	var uploadResp models.CSVUploadResponse
+	var uploadResp models.UploadsCSVResponse
 	decodeBody(resp, &uploadResp)
-	if err := uploadResp.HasError(); err != nil {
-		return nil, err
-	}
 
 	return &uploadResp, nil
 }
 
-func (c *duneClient) DeleteTable(namespace, tableName string) (*models.TableDeleteResponse, error) {
+func (c *duneClient) DeleteUpload(namespace, tableName string) (*models.UploadsDeleteResponse, error) {
 	deleteURL := fmt.Sprintf(deleteTableURLTemplate, c.env.Host, url.PathEscape(namespace), url.PathEscape(tableName))
 
 	req, err := http.NewRequest("DELETE", deleteURL, nil)
@@ -596,16 +587,13 @@ func (c *duneClient) DeleteTable(namespace, tableName string) (*models.TableDele
 		return nil, err
 	}
 
-	var deleteResp models.TableDeleteResponse
+	var deleteResp models.UploadsDeleteResponse
 	decodeBody(resp, &deleteResp)
-	if err := deleteResp.HasError(); err != nil {
-		return nil, err
-	}
 
 	return &deleteResp, nil
 }
 
-func (c *duneClient) ClearTable(namespace, tableName string) (*models.TableClearResponse, error) {
+func (c *duneClient) ClearUpload(namespace, tableName string) (*models.UploadsClearResponse, error) {
 	clearURL := fmt.Sprintf(clearTableURLTemplate, c.env.Host, url.PathEscape(namespace), url.PathEscape(tableName))
 
 	req, err := http.NewRequest("POST", clearURL, nil)
@@ -618,16 +606,15 @@ func (c *duneClient) ClearTable(namespace, tableName string) (*models.TableClear
 		return nil, err
 	}
 
-	var clearResp models.TableClearResponse
+	var clearResp models.UploadsClearResponse
 	decodeBody(resp, &clearResp)
-	if err := clearResp.HasError(); err != nil {
-		return nil, err
-	}
 
 	return &clearResp, nil
 }
 
-func (c *duneClient) InsertTable(namespace, tableName, data, contentType string) (*models.TableInsertResponse, error) {
+func (c *duneClient) InsertIntoUpload(
+	namespace, tableName, data, contentType string,
+) (*models.UploadsInsertResponse, error) {
 	insertURL := fmt.Sprintf(insertTableURLTemplate, c.env.Host, url.PathEscape(namespace), url.PathEscape(tableName))
 
 	req, err := http.NewRequest("POST", insertURL, bytes.NewBufferString(data))
@@ -642,16 +629,13 @@ func (c *duneClient) InsertTable(namespace, tableName, data, contentType string)
 		return nil, err
 	}
 
-	var insertResp models.TableInsertResponse
+	var insertResp models.UploadsInsertResponse
 	decodeBody(resp, &insertResp)
-	if err := insertResp.HasError(); err != nil {
-		return nil, err
-	}
 
 	return &insertResp, nil
 }
 
-func (c *duneClient) ListTablesDeprecated(limit, offset int) (*models.TableListResponse, error) {
+func (c *duneClient) ListTables(limit, offset int) (*models.UploadsListResponse, error) {
 	listURL := fmt.Sprintf(listTablesDeprecatedURLTemplate, c.env.Host)
 
 	params := fmt.Sprintf("?limit=%d&offset=%d", limit, offset)
@@ -666,16 +650,13 @@ func (c *duneClient) ListTablesDeprecated(limit, offset int) (*models.TableListR
 		return nil, err
 	}
 
-	var tablesResp models.TableListResponse
+	var tablesResp models.UploadsListResponse
 	decodeBody(resp, &tablesResp)
-	if err := tablesResp.HasError(); err != nil {
-		return nil, err
-	}
 
 	return &tablesResp, nil
 }
 
-func (c *duneClient) CreateTableDeprecated(req models.TableCreateRequest) (*models.TableCreateResponse, error) {
+func (c *duneClient) CreateTable(req models.UploadsCreateRequest) (*models.UploadsCreateResponse, error) {
 	createURL := fmt.Sprintf(createTableDeprecatedURLTemplate, c.env.Host)
 
 	jsonData, err := json.Marshal(req)
@@ -693,16 +674,13 @@ func (c *duneClient) CreateTableDeprecated(req models.TableCreateRequest) (*mode
 		return nil, err
 	}
 
-	var createResp models.TableCreateResponse
+	var createResp models.UploadsCreateResponse
 	decodeBody(resp, &createResp)
-	if err := createResp.HasError(); err != nil {
-		return nil, err
-	}
 
 	return &createResp, nil
 }
 
-func (c *duneClient) UploadCSVDeprecated(req models.CSVUploadRequest) (*models.CSVUploadResponse, error) {
+func (c *duneClient) UploadCSVDeprecated(req models.UploadsCSVRequest) (*models.UploadsCSVResponse, error) {
 	uploadURL := fmt.Sprintf(uploadCSVDeprecatedURLTemplate, c.env.Host)
 
 	jsonData, err := json.Marshal(req)
@@ -720,17 +698,17 @@ func (c *duneClient) UploadCSVDeprecated(req models.CSVUploadRequest) (*models.C
 		return nil, err
 	}
 
-	var uploadResp models.CSVUploadResponse
+	var uploadResp models.UploadsCSVResponse
 	decodeBody(resp, &uploadResp)
-	if err := uploadResp.HasError(); err != nil {
-		return nil, err
-	}
 
 	return &uploadResp, nil
 }
 
-func (c *duneClient) DeleteTableDeprecated(namespace, tableName string) (*models.TableDeleteResponse, error) {
-	deleteURL := fmt.Sprintf(deleteTableDeprecatedURLTemplate, c.env.Host, url.PathEscape(namespace), url.PathEscape(tableName))
+func (c *duneClient) DeleteTable(namespace, tableName string) (*models.UploadsDeleteResponse, error) {
+	deleteURL := fmt.Sprintf(
+		deleteTableDeprecatedURLTemplate, c.env.Host,
+		url.PathEscape(namespace), url.PathEscape(tableName),
+	)
 
 	req, err := http.NewRequest("DELETE", deleteURL, nil)
 	if err != nil {
@@ -742,17 +720,17 @@ func (c *duneClient) DeleteTableDeprecated(namespace, tableName string) (*models
 		return nil, err
 	}
 
-	var deleteResp models.TableDeleteResponse
+	var deleteResp models.UploadsDeleteResponse
 	decodeBody(resp, &deleteResp)
-	if err := deleteResp.HasError(); err != nil {
-		return nil, err
-	}
 
 	return &deleteResp, nil
 }
 
-func (c *duneClient) ClearTableDeprecated(namespace, tableName string) (*models.TableClearResponse, error) {
-	clearURL := fmt.Sprintf(clearTableDeprecatedURLTemplate, c.env.Host, namespace, tableName)
+func (c *duneClient) ClearTable(namespace, tableName string) (*models.UploadsClearResponse, error) {
+	clearURL := fmt.Sprintf(
+		clearTableDeprecatedURLTemplate, c.env.Host,
+		url.PathEscape(namespace), url.PathEscape(tableName),
+	)
 
 	req, err := http.NewRequest("POST", clearURL, nil)
 	if err != nil {
@@ -764,19 +742,19 @@ func (c *duneClient) ClearTableDeprecated(namespace, tableName string) (*models.
 		return nil, err
 	}
 
-	var clearResp models.TableClearResponse
+	var clearResp models.UploadsClearResponse
 	decodeBody(resp, &clearResp)
-	if err := clearResp.HasError(); err != nil {
-		return nil, err
-	}
 
 	return &clearResp, nil
 }
 
-func (c *duneClient) InsertTableDeprecated(
+func (c *duneClient) InsertTable(
 	namespace, tableName, data, contentType string,
-) (*models.TableInsertResponse, error) {
-	insertURL := fmt.Sprintf(insertTableDeprecatedURLTemplate, c.env.Host, url.PathEscape(namespace), url.PathEscape(tableName))
+) (*models.UploadsInsertResponse, error) {
+	insertURL := fmt.Sprintf(
+		insertTableDeprecatedURLTemplate, c.env.Host,
+		url.PathEscape(namespace), url.PathEscape(tableName),
+	)
 
 	req, err := http.NewRequest("POST", insertURL, bytes.NewBufferString(data))
 	if err != nil {
@@ -790,11 +768,8 @@ func (c *duneClient) InsertTableDeprecated(
 		return nil, err
 	}
 
-	var insertResp models.TableInsertResponse
+	var insertResp models.UploadsInsertResponse
 	decodeBody(resp, &insertResp)
-	if err := insertResp.HasError(); err != nil {
-		return nil, err
-	}
 
 	return &insertResp, nil
 }

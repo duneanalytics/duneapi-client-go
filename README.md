@@ -109,12 +109,12 @@ for _, table := range tables.Tables {
 }
 
 // Create a new table with defined schema
-createResp, err := client.CreateTable(models.TableCreateRequest{
+createResp, err := client.CreateUpload(models.UploadsCreateRequest{
 	Namespace:   "my_user",
 	TableName:   "interest_rates",
 	Description: "10 year daily interest rates",
 	IsPrivate:   false,
-	Schema: []models.TableColumn{
+	Schema: []models.UploadsColumn{
 		{
 			Name:     "date",
 			Type:     "timestamp",
@@ -133,7 +133,7 @@ if err != nil {
 fmt.Printf("Created table: %s\n", createResp.FullName)
 
 // Upload CSV data to create a new table
-csvResp, err := client.UploadCSV(models.CSVUploadRequest{
+csvResp, err := client.UploadCSV(models.UploadsCSVRequest{
 	TableName:   "my_table",
 	Data:        "col1,col2\nval1,val2\nval3,val4",
 	Description: "My test table",
@@ -145,7 +145,7 @@ if err != nil {
 fmt.Printf("Uploaded CSV to: %s\n", csvResp.FullName)
 
 // Insert data into an existing table (CSV format)
-insertResp, err := client.InsertTable(
+insertResp, err := client.InsertIntoUpload(
 	"my_user",
 	"interest_rates",
 	"2024-01-01,3.5\n2024-01-02,3.6",
@@ -159,7 +159,7 @@ fmt.Printf("Inserted %d rows (%d bytes)\n", insertResp.RowsWritten, insertResp.B
 // Insert data in NDJSON format
 ndjsonData := `{"date":"2024-01-03","rate":3.7}
 {"date":"2024-01-04","rate":3.8}`
-insertResp, err = client.InsertTable(
+insertResp, err = client.InsertIntoUpload(
 	"my_user",
 	"interest_rates",
 	ndjsonData,
@@ -167,13 +167,13 @@ insertResp, err = client.InsertTable(
 )
 
 // Clear all data from a table (preserves schema)
-clearResp, err := client.ClearTable("my_user", "interest_rates")
+clearResp, err := client.ClearUpload("my_user", "interest_rates")
 if err != nil {
 	// handle error
 }
 
 // Delete a table permanently
-deleteResp, err := client.DeleteTable("my_user", "interest_rates")
+deleteResp, err := client.DeleteUpload("my_user", "interest_rates")
 if err != nil {
 	// handle error
 }
@@ -185,22 +185,22 @@ if err != nil {
 
 ```go
 // DEPRECATED: Use ListUploads instead
-tables, err := client.ListTablesDeprecated(50, 0)
+tables, err := client.ListTables(50, 0)
 
-// DEPRECATED: Use CreateTable instead
-createResp, err := client.CreateTableDeprecated(req)
+// DEPRECATED: Use CreateUpload instead
+createResp, err := client.CreateTable(req)
 
 // DEPRECATED: Use UploadCSV instead
 csvResp, err := client.UploadCSVDeprecated(req)
 
-// DEPRECATED: Use DeleteTable instead
-deleteResp, err := client.DeleteTableDeprecated("my_user", "table_name")
+// DEPRECATED: Use DeleteUpload instead
+deleteResp, err := client.DeleteTable("my_user", "table_name")
 
-// DEPRECATED: Use ClearTable instead
-clearResp, err := client.ClearTableDeprecated("my_user", "table_name")
+// DEPRECATED: Use ClearUpload instead
+clearResp, err := client.ClearTable("my_user", "table_name")
 
-// DEPRECATED: Use InsertTable instead
-insertResp, err := client.InsertTableDeprecated("my_user", "table_name", data, contentType)
+// DEPRECATED: Use InsertIntoUpload instead
+insertResp, err := client.InsertTable("my_user", "table_name", data, contentType)
 ```
 
 ## CLI usage

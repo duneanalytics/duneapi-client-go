@@ -18,14 +18,14 @@ type DatasetOwner struct {
 }
 
 type DatasetResponse struct {
-	Type       string           `json:"type"`
-	FullName   string           `json:"full_name"`
-	IsPrivate  bool             `json:"is_private"`
-	Columns    []DatasetColumn  `json:"columns"`
-	Owner      *DatasetOwner    `json:"owner"`
-	Metadata   map[string]any   `json:"metadata,omitempty"`
-	CreatedAt  string           `json:"created_at"`
-	UpdatedAt  string           `json:"updated_at"`
+	Type      string          `json:"type"`
+	FullName  string          `json:"full_name"`
+	IsPrivate bool            `json:"is_private"`
+	Columns   []DatasetColumn `json:"columns"`
+	Owner     *DatasetOwner   `json:"owner"`
+	Metadata  map[string]any  `json:"metadata,omitempty"`
+	CreatedAt string          `json:"created_at"`
+	UpdatedAt string          `json:"updated_at"`
 }
 
 func (d DatasetResponse) HasError() error {
