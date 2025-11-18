@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/duneanalytics/duneapi-client-go/config"
@@ -67,6 +68,48 @@ type DuneClient interface {
 
 	// GetUsageForDates returns usage statistics for a specified time range
 	GetUsageForDates(startDate, endDate string) (*models.UsageResponse, error)
+
+	// ListDatasets returns a paginated list of datasets with optional filtering
+	ListDatasets(limit, offset int, ownerHandle, datasetType string) (*models.ListDatasetsResponse, error)
+
+	// GetDataset returns detailed information about a specific dataset by slug
+	GetDataset(slug string) (*models.DatasetResponse, error)
+
+	// ListUploads returns a paginated list of uploaded tables
+	ListUploads(limit, offset int) (*models.UploadsListResponse, error)
+
+	// CreateUpload creates an empty table with defined schema
+	CreateUpload(req models.UploadsCreateRequest) (*models.UploadsCreateResponse, error)
+
+	// UploadCSV uploads CSV data to create a new table
+	UploadCSV(req models.UploadsCSVRequest) (*models.UploadsCSVResponse, error)
+
+	// DeleteUpload permanently deletes a table and all its data
+	DeleteUpload(namespace, tableName string) (*models.UploadsDeleteResponse, error)
+
+	// ClearUpload removes all data from a table while preserving schema
+	ClearUpload(namespace, tableName string) (*models.UploadsClearResponse, error)
+
+	// InsertIntoUpload inserts data into an existing table (CSV or NDJSON format)
+	InsertIntoUpload(namespace, tableName, data, contentType string) (*models.UploadsInsertResponse, error)
+
+	// DEPRECATED: Use ListUploads instead. Will be removed March 1, 2026.
+	ListTables(limit, offset int) (*models.UploadsListResponse, error)
+
+	// DEPRECATED: Use CreateUpload instead. Will be removed March 1, 2026.
+	CreateTable(req models.UploadsCreateRequest) (*models.UploadsCreateResponse, error)
+
+	// DEPRECATED: Use UploadCSV instead. Will be removed March 1, 2026.
+	UploadCSVDeprecated(req models.UploadsCSVRequest) (*models.UploadsCSVResponse, error)
+
+	// DEPRECATED: Use DeleteUpload instead. Will be removed March 1, 2026.
+	DeleteTable(namespace, tableName string) (*models.UploadsDeleteResponse, error)
+
+	// DEPRECATED: Use ClearUpload instead. Will be removed March 1, 2026.
+	ClearTable(namespace, tableName string) (*models.UploadsClearResponse, error)
+
+	// DEPRECATED: Use InsertIntoUpload instead. Will be removed March 1, 2026.
+	InsertTable(namespace, tableName, data, contentType string) (*models.UploadsInsertResponse, error)
 }
 
 type duneClient struct {
@@ -74,17 +117,31 @@ type duneClient struct {
 }
 
 var (
-	cancelURLTemplate              = "%s/api/v1/execution/%s/cancel"
-	executeURLTemplate             = "%s/api/v1/query/%d/execute"
-	sqlExecuteURLTemplate          = "%s/api/v1/sql/execute"
-	pipelineExecuteURLTemplate     = "%s/api/v1/query/%s/pipeline/execute"
-	pipelineStatusURLTemplate      = "%s/api/v1/pipelines/executions/%s/status"
-	statusURLTemplate              = "%s/api/v1/execution/%s/status"
-	executionResultsURLTemplate    = "%s/api/v1/execution/%s/results"
-	executionResultsCSVURLTemplate = "%s/api/v1/execution/%s/results/csv"
-	queryResultsURLTemplate        = "%s/api/v1/query/%s/results"
-	queryResultsCSVURLTemplate     = "%s/api/v1/query/%s/results/csv"
-	usageURLTemplate               = "%s/api/v1/usage"
+	cancelURLTemplate                = "%s/api/v1/execution/%s/cancel"
+	executeURLTemplate               = "%s/api/v1/query/%d/execute"
+	sqlExecuteURLTemplate            = "%s/api/v1/sql/execute"
+	pipelineExecuteURLTemplate       = "%s/api/v1/query/%s/pipeline/execute"
+	pipelineStatusURLTemplate        = "%s/api/v1/pipelines/executions/%s/status"
+	statusURLTemplate                = "%s/api/v1/execution/%s/status"
+	executionResultsURLTemplate      = "%s/api/v1/execution/%s/results"
+	executionResultsCSVURLTemplate   = "%s/api/v1/execution/%s/results/csv"
+	queryResultsURLTemplate          = "%s/api/v1/query/%s/results"
+	queryResultsCSVURLTemplate       = "%s/api/v1/query/%s/results/csv"
+	usageURLTemplate                 = "%s/api/v1/usage"
+	listDatasetsURLTemplate          = "%s/api/v1/datasets"
+	getDatasetURLTemplate            = "%s/api/v1/datasets/%s"
+	listUploadsURLTemplate           = "%s/api/v1/uploads"
+	createTableURLTemplate           = "%s/api/v1/uploads"
+	uploadCSVURLTemplate             = "%s/api/v1/uploads/csv"
+	deleteTableURLTemplate           = "%s/api/v1/uploads/%s/%s"
+	clearTableURLTemplate            = "%s/api/v1/uploads/%s/%s/clear"
+	insertTableURLTemplate           = "%s/api/v1/uploads/%s/%s/insert"
+	listTablesDeprecatedURLTemplate  = "%s/api/v1/tables"
+	createTableDeprecatedURLTemplate = "%s/api/v1/table/create"
+	uploadCSVDeprecatedURLTemplate   = "%s/api/v1/table/upload/csv"
+	deleteTableDeprecatedURLTemplate = "%s/api/v1/table/%s/%s"
+	clearTableDeprecatedURLTemplate  = "%s/api/v1/table/%s/%s/clear"
+	insertTableDeprecatedURLTemplate = "%s/api/v1/table/%s/%s/insert"
 )
 
 var ErrorRetriesExhausted = errors.New("retries have been exhausted")
@@ -197,7 +254,7 @@ func (c *duneClient) SQLExecute(sql string, performance string) (*models.Execute
 	if err != nil {
 		return nil, err
 	}
-	
+
 	resp, err := httpRequest(c.env.APIKey, req)
 	if err != nil {
 		return nil, err
@@ -369,7 +426,7 @@ func (c *duneClient) GetUsageForDates(startDate, endDate string) (*models.UsageR
 
 func (c *duneClient) getUsage(startDate, endDate *string) (*models.UsageResponse, error) {
 	usageURL := fmt.Sprintf(usageURLTemplate, c.env.Host)
-	
+
 	jsonData, err := json.Marshal(models.UsageRequest{
 		StartDate: startDate,
 		EndDate:   endDate,
@@ -377,12 +434,12 @@ func (c *duneClient) getUsage(startDate, endDate *string) (*models.UsageResponse
 	if err != nil {
 		return nil, err
 	}
-	
+
 	req, err := http.NewRequest("POST", usageURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, err
 	}
-	
+
 	resp, err := httpRequest(c.env.APIKey, req)
 	if err != nil {
 		return nil, err
@@ -392,4 +449,327 @@ func (c *duneClient) getUsage(startDate, endDate *string) (*models.UsageResponse
 	decodeBody(resp, &usageResp)
 
 	return &usageResp, nil
+}
+
+func (c *duneClient) ListDatasets(
+	limit, offset int, ownerHandle, datasetType string,
+) (*models.ListDatasetsResponse, error) {
+	listURL := fmt.Sprintf(listDatasetsURLTemplate, c.env.Host)
+
+	params := fmt.Sprintf("?limit=%d&offset=%d", limit, offset)
+	if ownerHandle != "" {
+		params += fmt.Sprintf("&owner_handle=%s", url.QueryEscape(ownerHandle))
+	}
+	if datasetType != "" {
+		params += fmt.Sprintf("&type=%s", url.QueryEscape(datasetType))
+	}
+
+	req, err := http.NewRequest("GET", listURL+params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := httpRequest(c.env.APIKey, req)
+	if err != nil {
+		return nil, err
+	}
+
+	var datasetsResp models.ListDatasetsResponse
+	decodeBody(resp, &datasetsResp)
+	if err := datasetsResp.HasError(); err != nil {
+		return nil, err
+	}
+
+	return &datasetsResp, nil
+}
+
+func (c *duneClient) GetDataset(slug string) (*models.DatasetResponse, error) {
+	getURL := fmt.Sprintf(getDatasetURLTemplate, c.env.Host, slug)
+
+	req, err := http.NewRequest("GET", getURL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := httpRequest(c.env.APIKey, req)
+	if err != nil {
+		return nil, err
+	}
+
+	var datasetResp models.DatasetResponse
+	decodeBody(resp, &datasetResp)
+	if err := datasetResp.HasError(); err != nil {
+		return nil, err
+	}
+
+	return &datasetResp, nil
+}
+
+func (c *duneClient) ListUploads(limit, offset int) (*models.UploadsListResponse, error) {
+	listURL := fmt.Sprintf(listUploadsURLTemplate, c.env.Host)
+
+	params := fmt.Sprintf("?limit=%d&offset=%d", limit, offset)
+
+	req, err := http.NewRequest("GET", listURL+params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := httpRequest(c.env.APIKey, req)
+	if err != nil {
+		return nil, err
+	}
+
+	var uploadsResp models.UploadsListResponse
+	decodeBody(resp, &uploadsResp)
+
+	return &uploadsResp, nil
+}
+
+func (c *duneClient) CreateUpload(req models.UploadsCreateRequest) (*models.UploadsCreateResponse, error) {
+	createURL := fmt.Sprintf(createTableURLTemplate, c.env.Host)
+
+	jsonData, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	httpReq, err := http.NewRequest("POST", createURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := httpRequest(c.env.APIKey, httpReq)
+	if err != nil {
+		return nil, err
+	}
+
+	var createResp models.UploadsCreateResponse
+	decodeBody(resp, &createResp)
+
+	return &createResp, nil
+}
+
+func (c *duneClient) UploadCSV(req models.UploadsCSVRequest) (*models.UploadsCSVResponse, error) {
+	uploadURL := fmt.Sprintf(uploadCSVURLTemplate, c.env.Host)
+
+	jsonData, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	httpReq, err := http.NewRequest("POST", uploadURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := httpRequest(c.env.APIKey, httpReq)
+	if err != nil {
+		return nil, err
+	}
+
+	var uploadResp models.UploadsCSVResponse
+	decodeBody(resp, &uploadResp)
+
+	return &uploadResp, nil
+}
+
+func (c *duneClient) DeleteUpload(namespace, tableName string) (*models.UploadsDeleteResponse, error) {
+	deleteURL := fmt.Sprintf(deleteTableURLTemplate, c.env.Host, url.PathEscape(namespace), url.PathEscape(tableName))
+
+	req, err := http.NewRequest("DELETE", deleteURL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := httpRequest(c.env.APIKey, req)
+	if err != nil {
+		return nil, err
+	}
+
+	var deleteResp models.UploadsDeleteResponse
+	decodeBody(resp, &deleteResp)
+
+	return &deleteResp, nil
+}
+
+func (c *duneClient) ClearUpload(namespace, tableName string) (*models.UploadsClearResponse, error) {
+	clearURL := fmt.Sprintf(clearTableURLTemplate, c.env.Host, url.PathEscape(namespace), url.PathEscape(tableName))
+
+	req, err := http.NewRequest("POST", clearURL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := httpRequest(c.env.APIKey, req)
+	if err != nil {
+		return nil, err
+	}
+
+	var clearResp models.UploadsClearResponse
+	decodeBody(resp, &clearResp)
+
+	return &clearResp, nil
+}
+
+func (c *duneClient) InsertIntoUpload(
+	namespace, tableName, data, contentType string,
+) (*models.UploadsInsertResponse, error) {
+	insertURL := fmt.Sprintf(insertTableURLTemplate, c.env.Host, url.PathEscape(namespace), url.PathEscape(tableName))
+
+	req, err := http.NewRequest("POST", insertURL, bytes.NewBufferString(data))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", contentType)
+
+	resp, err := httpRequest(c.env.APIKey, req)
+	if err != nil {
+		return nil, err
+	}
+
+	var insertResp models.UploadsInsertResponse
+	decodeBody(resp, &insertResp)
+
+	return &insertResp, nil
+}
+
+func (c *duneClient) ListTables(limit, offset int) (*models.UploadsListResponse, error) {
+	listURL := fmt.Sprintf(listTablesDeprecatedURLTemplate, c.env.Host)
+
+	params := fmt.Sprintf("?limit=%d&offset=%d", limit, offset)
+
+	req, err := http.NewRequest("GET", listURL+params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := httpRequest(c.env.APIKey, req)
+	if err != nil {
+		return nil, err
+	}
+
+	var tablesResp models.UploadsListResponse
+	decodeBody(resp, &tablesResp)
+
+	return &tablesResp, nil
+}
+
+func (c *duneClient) CreateTable(req models.UploadsCreateRequest) (*models.UploadsCreateResponse, error) {
+	createURL := fmt.Sprintf(createTableDeprecatedURLTemplate, c.env.Host)
+
+	jsonData, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	httpReq, err := http.NewRequest("POST", createURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := httpRequest(c.env.APIKey, httpReq)
+	if err != nil {
+		return nil, err
+	}
+
+	var createResp models.UploadsCreateResponse
+	decodeBody(resp, &createResp)
+
+	return &createResp, nil
+}
+
+func (c *duneClient) UploadCSVDeprecated(req models.UploadsCSVRequest) (*models.UploadsCSVResponse, error) {
+	uploadURL := fmt.Sprintf(uploadCSVDeprecatedURLTemplate, c.env.Host)
+
+	jsonData, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	httpReq, err := http.NewRequest("POST", uploadURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := httpRequest(c.env.APIKey, httpReq)
+	if err != nil {
+		return nil, err
+	}
+
+	var uploadResp models.UploadsCSVResponse
+	decodeBody(resp, &uploadResp)
+
+	return &uploadResp, nil
+}
+
+func (c *duneClient) DeleteTable(namespace, tableName string) (*models.UploadsDeleteResponse, error) {
+	deleteURL := fmt.Sprintf(
+		deleteTableDeprecatedURLTemplate, c.env.Host,
+		url.PathEscape(namespace), url.PathEscape(tableName),
+	)
+
+	req, err := http.NewRequest("DELETE", deleteURL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := httpRequest(c.env.APIKey, req)
+	if err != nil {
+		return nil, err
+	}
+
+	var deleteResp models.UploadsDeleteResponse
+	decodeBody(resp, &deleteResp)
+
+	return &deleteResp, nil
+}
+
+func (c *duneClient) ClearTable(namespace, tableName string) (*models.UploadsClearResponse, error) {
+	clearURL := fmt.Sprintf(
+		clearTableDeprecatedURLTemplate, c.env.Host,
+		url.PathEscape(namespace), url.PathEscape(tableName),
+	)
+
+	req, err := http.NewRequest("POST", clearURL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := httpRequest(c.env.APIKey, req)
+	if err != nil {
+		return nil, err
+	}
+
+	var clearResp models.UploadsClearResponse
+	decodeBody(resp, &clearResp)
+
+	return &clearResp, nil
+}
+
+func (c *duneClient) InsertTable(
+	namespace, tableName, data, contentType string,
+) (*models.UploadsInsertResponse, error) {
+	insertURL := fmt.Sprintf(
+		insertTableDeprecatedURLTemplate, c.env.Host,
+		url.PathEscape(namespace), url.PathEscape(tableName),
+	)
+
+	req, err := http.NewRequest("POST", insertURL, bytes.NewBufferString(data))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", contentType)
+
+	resp, err := httpRequest(c.env.APIKey, req)
+	if err != nil {
+		return nil, err
+	}
+
+	var insertResp models.UploadsInsertResponse
+	decodeBody(resp, &insertResp)
+
+	return &insertResp, nil
 }

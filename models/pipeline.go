@@ -15,4 +15,3 @@ type PipelineStatusResponse struct {
 	Status         string                  `json:"status,omitempty"`
 	NodeExecutions []PipelineNodeExecution `json:"node_executions,omitempty"`
 }
-

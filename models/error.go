@@ -5,4 +5,3 @@ type ExecutionError struct {
 	Message  string                 `json:"message"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
-

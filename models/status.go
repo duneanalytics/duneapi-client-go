@@ -8,15 +8,15 @@ import (
 )
 
 type StatusResponse struct {
-	ExecutionID        string           `json:"execution_id,omitempty"`
-	QueryID            int              `json:"query_id,omitempty"`
-	State              string           `json:"state,omitempty"`
-	SubmittedAt        time.Time        `json:"submitted_at,omitempty"`
-	ExecutionStartedAt *time.Time       `json:"execution_started_at,omitempty"`
-	ExecutionEndedAt   *time.Time       `json:"execution_ended_at,omitempty"`
-	CancelledAt        *time.Time       `json:"cancelled_at,omitempty"`
-	Error              *ExecutionError  `json:"error,omitempty"`
-	ResultMetadata     *ResultMetadata  `json:"result_metadata,omitempty"`
+	ExecutionID        string          `json:"execution_id,omitempty"`
+	QueryID            int             `json:"query_id,omitempty"`
+	State              string          `json:"state,omitempty"`
+	SubmittedAt        time.Time       `json:"submitted_at,omitempty"`
+	ExecutionStartedAt *time.Time      `json:"execution_started_at,omitempty"`
+	ExecutionEndedAt   *time.Time      `json:"execution_ended_at,omitempty"`
+	CancelledAt        *time.Time      `json:"cancelled_at,omitempty"`
+	Error              *ExecutionError `json:"error,omitempty"`
+	ResultMetadata     *ResultMetadata `json:"result_metadata,omitempty"`
 }
 
 func (s StatusResponse) HasError() error {
