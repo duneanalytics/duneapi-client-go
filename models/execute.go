@@ -6,12 +6,15 @@ import (
 )
 
 type ExecuteRequest struct {
+	QueryID         int            `json:"-"`
 	QueryParameters map[string]any `json:"query_parameters,omitempty"`
+	Performance     string         `json:"performance,omitempty"`
 }
 
 type ExecuteSQLRequest struct {
-	SQL         string `json:"sql"`
-	Performance string `json:"performance,omitempty"`
+	SQL             string         `json:"sql"`
+	Performance     string         `json:"performance,omitempty"`
+	QueryParameters map[string]any `json:"query_parameters,omitempty"`
 }
 
 type ExecuteResponse struct {
@@ -31,6 +34,7 @@ func (e ExecuteResponse) HasError() error {
 }
 
 type PipelineExecuteRequest struct {
+	QueryID     string `json:"-"`
 	Performance string `json:"performance,omitempty"`
 }
 

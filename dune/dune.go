@@ -22,28 +22,28 @@ type DuneClient interface {
 	// returns the results of a QueryID, depending on whether it has completed
 	ResultsByQueryID(queryID string, options models.ResultOptions) (*models.ResultsResponse, error)
 
-	// RunQueryGetRows submits a query for execution and returns an Execution object
-	RunQuery(queryID int, queryParameters map[string]any) (Execution, error)
+	// RunQuery submits a query for execution and returns an Execution object
+	RunQuery(req models.ExecuteRequest) (Execution, error)
 	// RunQueryGetRows submits a query for execution, blocks until execution is finished, and returns just the result rows
-	RunQueryGetRows(queryID int, queryParameters map[string]any) ([]map[string]any, error)
+	RunQueryGetRows(req models.ExecuteRequest) ([]map[string]any, error)
 
 	// QueryCancel cancels the execution of an execution in the pending or executing state
 	QueryCancel(executionID string) error
 
 	// QueryExecute submits a query to execute with the provided parameters
-	QueryExecute(queryID int, queryParameters map[string]any) (*models.ExecuteResponse, error)
+	QueryExecute(req models.ExecuteRequest) (*models.ExecuteResponse, error)
 
 	// SQLExecute executes raw SQL with optional performance parameter
-	SQLExecute(sql string, performance string) (*models.ExecuteResponse, error)
+	SQLExecute(req models.ExecuteSQLRequest) (*models.ExecuteResponse, error)
 
 	// QueryPipelineExecute submits a query pipeline for execution with optional performance parameter
-	QueryPipelineExecute(queryID string, performance string) (*models.PipelineExecuteResponse, error)
+	QueryPipelineExecute(req models.PipelineExecuteRequest) (*models.PipelineExecuteResponse, error)
 
 	// PipelineStatus returns the current pipeline execution status
 	PipelineStatus(pipelineExecutionID string) (*models.PipelineStatusResponse, error)
 
 	// RunSQL submits raw SQL for execution and returns an Execution object
-	RunSQL(sql string, performance string) (Execution, error)
+	RunSQL(req models.ExecuteSQLRequest) (Execution, error)
 
 	// QueryStatus returns the current execution status
 	QueryStatus(executionID string) (*models.StatusResponse, error)
@@ -110,6 +110,18 @@ type DuneClient interface {
 
 	// DEPRECATED: Use InsertIntoUpload instead. Will be removed March 1, 2026.
 	InsertTable(namespace, tableName, data, contentType string) (*models.UploadsInsertResponse, error)
+
+	// CreateQuery creates a new saved query
+	CreateQuery(req models.CreateQueryRequest) (*models.CreateQueryResponse, error)
+
+	// GetQuery retrieves a saved query by ID
+	GetQuery(queryID int) (*models.GetQueryResponse, error)
+
+	// UpdateQuery updates an existing saved query
+	UpdateQuery(queryID int, req models.UpdateQueryRequest) (*models.UpdateQueryResponse, error)
+
+	// ArchiveQuery archives a saved query
+	ArchiveQuery(queryID int) (*models.UpdateQueryResponse, error)
 }
 
 type duneClient struct {
@@ -142,6 +154,9 @@ var (
 	deleteTableDeprecatedURLTemplate = "%s/api/v1/table/%s/%s"
 	clearTableDeprecatedURLTemplate  = "%s/api/v1/table/%s/%s/clear"
 	insertTableDeprecatedURLTemplate = "%s/api/v1/table/%s/%s/insert"
+	createQueryURLTemplate           = "%s/api/v1/query"
+	queryURLTemplate                 = "%s/api/v1/query/%d"
+	archiveQueryURLTemplate          = "%s/api/v1/query/%d/archive"
 )
 
 var ErrorRetriesExhausted = errors.New("retries have been exhausted")
@@ -154,8 +169,8 @@ func NewDuneClient(env *config.Env) *duneClient {
 	}
 }
 
-func (c *duneClient) RunQuery(queryID int, queryParameters map[string]any) (Execution, error) {
-	resp, err := c.QueryExecute(queryID, queryParameters)
+func (c *duneClient) RunQuery(req models.ExecuteRequest) (Execution, error) {
+	resp, err := c.QueryExecute(req)
 	if err != nil {
 		return nil, err
 	}
@@ -166,8 +181,8 @@ func (c *duneClient) RunQuery(queryID int, queryParameters map[string]any) (Exec
 	}, nil
 }
 
-func (c *duneClient) RunSQL(sql string, performance string) (Execution, error) {
-	resp, err := c.SQLExecute(sql, performance)
+func (c *duneClient) RunSQL(req models.ExecuteSQLRequest) (Execution, error) {
+	resp, err := c.SQLExecute(req)
 	if err != nil {
 		return nil, err
 	}
@@ -178,8 +193,8 @@ func (c *duneClient) RunSQL(sql string, performance string) (Execution, error) {
 	}, nil
 }
 
-func (c *duneClient) RunQueryGetRows(queryID int, queryParameters map[string]any) ([]map[string]any, error) {
-	execution, err := c.RunQuery(queryID, queryParameters)
+func (c *duneClient) RunQueryGetRows(req models.ExecuteRequest) ([]map[string]any, error) {
+	execution, err := c.RunQuery(req)
 	if err != nil {
 		return nil, err
 	}
@@ -214,19 +229,17 @@ func (c *duneClient) QueryCancel(executionID string) error {
 	return nil
 }
 
-func (c *duneClient) QueryExecute(queryID int, queryParameters map[string]any) (*models.ExecuteResponse, error) {
-	executeURL := fmt.Sprintf(executeURLTemplate, c.env.Host, queryID)
-	jsonData, err := json.Marshal(models.ExecuteRequest{
-		QueryParameters: queryParameters,
-	})
+func (c *duneClient) QueryExecute(req models.ExecuteRequest) (*models.ExecuteResponse, error) {
+	executeURL := fmt.Sprintf(executeURLTemplate, c.env.Host, req.QueryID)
+	jsonData, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest("POST", executeURL, bytes.NewBuffer(jsonData))
+	httpReq, err := http.NewRequest("POST", executeURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, err
 	}
-	resp, err := httpRequest(c.env.APIKey, req)
+	resp, err := httpRequest(c.env.APIKey, httpReq)
 	if err != nil {
 		return nil, err
 	}
@@ -240,22 +253,19 @@ func (c *duneClient) QueryExecute(queryID int, queryParameters map[string]any) (
 	return &executeResp, nil
 }
 
-func (c *duneClient) SQLExecute(sql string, performance string) (*models.ExecuteResponse, error) {
+func (c *duneClient) SQLExecute(req models.ExecuteSQLRequest) (*models.ExecuteResponse, error) {
 	executeURL := fmt.Sprintf(sqlExecuteURLTemplate, c.env.Host)
-	jsonData, err := json.Marshal(models.ExecuteSQLRequest{
-		SQL:         sql,
-		Performance: performance,
-	})
+	jsonData, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", executeURL, bytes.NewBuffer(jsonData))
+	httpReq, err := http.NewRequest("POST", executeURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, req)
+	resp, err := httpRequest(c.env.APIKey, httpReq)
 	if err != nil {
 		return nil, err
 	}
@@ -269,21 +279,19 @@ func (c *duneClient) SQLExecute(sql string, performance string) (*models.Execute
 	return &executeResp, nil
 }
 
-func (c *duneClient) QueryPipelineExecute(queryID string, performance string) (*models.PipelineExecuteResponse, error) {
-	executeURL := fmt.Sprintf(pipelineExecuteURLTemplate, c.env.Host, queryID)
-	jsonData, err := json.Marshal(models.PipelineExecuteRequest{
-		Performance: performance,
-	})
+func (c *duneClient) QueryPipelineExecute(req models.PipelineExecuteRequest) (*models.PipelineExecuteResponse, error) {
+	executeURL := fmt.Sprintf(pipelineExecuteURLTemplate, c.env.Host, req.QueryID)
+	jsonData, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", executeURL, bytes.NewBuffer(jsonData))
+	httpReq, err := http.NewRequest("POST", executeURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, req)
+	resp, err := httpRequest(c.env.APIKey, httpReq)
 	if err != nil {
 		return nil, err
 	}
