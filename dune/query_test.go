@@ -12,8 +12,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func newTestClient(handler http.HandlerFunc) *duneClient {
+func newTestClient(t *testing.T, handler http.HandlerFunc) *duneClient {
 	server := httptest.NewServer(handler)
+	t.Cleanup(server.Close)
 	return &duneClient{
 		env: &config.Env{
 			APIKey: "test-api-key",
@@ -26,7 +27,7 @@ func TestCreateQuery(t *testing.T) {
 	var gotMethod, gotPath string
 	var gotBody models.CreateQueryRequest
 
-	client := newTestClient(func(w http.ResponseWriter, r *http.Request) {
+	client := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		gotMethod = r.Method
 		gotPath = r.URL.Path
 		body, _ := io.ReadAll(r.Body)
@@ -52,7 +53,7 @@ func TestCreateQuery(t *testing.T) {
 func TestGetQuery(t *testing.T) {
 	var gotMethod, gotPath string
 
-	client := newTestClient(func(w http.ResponseWriter, r *http.Request) {
+	client := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		gotMethod = r.Method
 		gotPath = r.URL.Path
 
@@ -78,7 +79,7 @@ func TestUpdateQuery(t *testing.T) {
 	var gotMethod, gotPath string
 	var gotBody map[string]any
 
-	client := newTestClient(func(w http.ResponseWriter, r *http.Request) {
+	client := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		gotMethod = r.Method
 		gotPath = r.URL.Path
 		body, _ := io.ReadAll(r.Body)
@@ -103,7 +104,7 @@ func TestUpdateQuery(t *testing.T) {
 func TestArchiveQuery(t *testing.T) {
 	var gotMethod, gotPath string
 
-	client := newTestClient(func(w http.ResponseWriter, r *http.Request) {
+	client := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		gotMethod = r.Method
 		gotPath = r.URL.Path
 
@@ -120,7 +121,7 @@ func TestArchiveQuery(t *testing.T) {
 }
 
 func TestCreateQueryError(t *testing.T) {
-	client := newTestClient(func(w http.ResponseWriter, r *http.Request) {
+	client := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(ErrorResponse{Error: "invalid query"})
 	})
@@ -135,7 +136,7 @@ func TestCreateQueryError(t *testing.T) {
 }
 
 func TestGetQueryError(t *testing.T) {
-	client := newTestClient(func(w http.ResponseWriter, r *http.Request) {
+	client := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(ErrorResponse{Error: "query not found"})
 	})
@@ -149,7 +150,7 @@ func TestGetQueryError(t *testing.T) {
 func TestQueryExecuteWithPerformance(t *testing.T) {
 	var gotBody map[string]any
 
-	client := newTestClient(func(w http.ResponseWriter, r *http.Request) {
+	client := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
 		json.Unmarshal(body, &gotBody)
 
@@ -175,7 +176,7 @@ func TestQueryExecuteWithPerformance(t *testing.T) {
 func TestSQLExecuteWithQueryParameters(t *testing.T) {
 	var gotBody map[string]any
 
-	client := newTestClient(func(w http.ResponseWriter, r *http.Request) {
+	client := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
 		json.Unmarshal(body, &gotBody)
 

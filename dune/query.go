@@ -28,7 +28,9 @@ func (c *duneClient) CreateQuery(req models.CreateQueryRequest) (*models.CreateQ
 	}
 
 	var createResp models.CreateQueryResponse
-	decodeBody(resp, &createResp)
+	if err := decodeBody(resp, &createResp); err != nil {
+		return nil, err
+	}
 
 	return &createResp, nil
 }
@@ -47,7 +49,9 @@ func (c *duneClient) GetQuery(queryID int) (*models.GetQueryResponse, error) {
 	}
 
 	var getResp models.GetQueryResponse
-	decodeBody(resp, &getResp)
+	if err := decodeBody(resp, &getResp); err != nil {
+		return nil, err
+	}
 
 	return &getResp, nil
 }
@@ -71,7 +75,9 @@ func (c *duneClient) UpdateQuery(queryID int, req models.UpdateQueryRequest) (*m
 	}
 
 	var updateResp models.UpdateQueryResponse
-	decodeBody(resp, &updateResp)
+	if err := decodeBody(resp, &updateResp); err != nil {
+		return nil, err
+	}
 
 	return &updateResp, nil
 }
@@ -90,7 +96,9 @@ func (c *duneClient) ArchiveQuery(queryID int) (*models.UpdateQueryResponse, err
 	}
 
 	var archiveResp models.UpdateQueryResponse
-	decodeBody(resp, &archiveResp)
+	if err := decodeBody(resp, &archiveResp); err != nil {
+		return nil, err
+	}
 
 	return &archiveResp, nil
 }

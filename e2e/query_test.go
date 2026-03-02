@@ -28,6 +28,7 @@ func TestCreateAndGetQuery(t *testing.T) {
 	})
 	require.NoError(t, err)
 	assert.Greater(t, createResp.QueryID, 0)
+	t.Cleanup(func() { client.ArchiveQuery(createResp.QueryID) })
 
 	getResp, err := client.GetQuery(createResp.QueryID)
 	require.NoError(t, err)
@@ -35,10 +36,6 @@ func TestCreateAndGetQuery(t *testing.T) {
 	assert.Equal(t, queryName, getResp.Name)
 	assert.Equal(t, "SELECT 1 AS test_value", getResp.QuerySQL)
 	assert.False(t, getResp.IsArchived)
-
-	// Cleanup
-	_, err = client.ArchiveQuery(createResp.QueryID)
-	require.NoError(t, err)
 }
 
 func TestUpdateQuery(t *testing.T) {
@@ -53,6 +50,7 @@ func TestUpdateQuery(t *testing.T) {
 		QuerySQL: "SELECT 1",
 	})
 	require.NoError(t, err)
+	t.Cleanup(func() { client.ArchiveQuery(createResp.QueryID) })
 
 	updatedName := generateQueryName() + "_updated"
 	updatedSQL := "SELECT 2 AS updated_value"
@@ -67,10 +65,6 @@ func TestUpdateQuery(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, updatedName, getResp.Name)
 	assert.Equal(t, updatedSQL, getResp.QuerySQL)
-
-	// Cleanup
-	_, err = client.ArchiveQuery(createResp.QueryID)
-	require.NoError(t, err)
 }
 
 func TestArchiveQuery(t *testing.T) {
@@ -108,14 +102,11 @@ func TestCreateQueryWithDescription(t *testing.T) {
 		Description: "E2E test query with description",
 	})
 	require.NoError(t, err)
+	t.Cleanup(func() { client.ArchiveQuery(createResp.QueryID) })
 
 	getResp, err := client.GetQuery(createResp.QueryID)
 	require.NoError(t, err)
 	assert.Equal(t, "E2E test query with description", getResp.Description)
-
-	// Cleanup
-	_, err = client.ArchiveQuery(createResp.QueryID)
-	require.NoError(t, err)
 }
 
 func TestQueryExecuteAndGetResults(t *testing.T) {
@@ -130,6 +121,7 @@ func TestQueryExecuteAndGetResults(t *testing.T) {
 		QuerySQL: "SELECT 1 AS val",
 	})
 	require.NoError(t, err)
+	t.Cleanup(func() { client.ArchiveQuery(createResp.QueryID) })
 
 	execResp, err := client.QueryExecute(models.ExecuteRequest{
 		QueryID: createResp.QueryID,
@@ -137,10 +129,6 @@ func TestQueryExecuteAndGetResults(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEmpty(t, execResp.ExecutionID)
 	assert.Contains(t, execResp.State, "QUERY_STATE_")
-
-	// Cleanup
-	_, err = client.ArchiveQuery(createResp.QueryID)
-	require.NoError(t, err)
 }
 
 func TestSQLExecute(t *testing.T) {
@@ -170,6 +158,7 @@ func TestRunQueryGetRows(t *testing.T) {
 		QuerySQL: "SELECT 42 AS answer",
 	})
 	require.NoError(t, err)
+	t.Cleanup(func() { client.ArchiveQuery(createResp.QueryID) })
 
 	rows, err := client.RunQueryGetRows(models.ExecuteRequest{
 		QueryID: createResp.QueryID,
@@ -177,8 +166,4 @@ func TestRunQueryGetRows(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, rows, 1)
 	assert.Equal(t, float64(42), rows[0]["answer"])
-
-	// Cleanup
-	_, err = client.ArchiveQuery(createResp.QueryID)
-	require.NoError(t, err)
 }
