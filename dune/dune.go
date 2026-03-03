@@ -122,6 +122,9 @@ type DuneClient interface {
 
 	// ArchiveQuery archives a saved query
 	ArchiveQuery(queryID int) (*models.UpdateQueryResponse, error)
+
+	// SearchDatasets searches for datasets across the catalog with advanced filters
+	SearchDatasets(req models.SearchDatasetsRequest) (*models.SearchDatasetsResponse, error)
 }
 
 type duneClient struct {
@@ -157,6 +160,7 @@ var (
 	createQueryURLTemplate           = "%s/api/v1/query"
 	queryURLTemplate                 = "%s/api/v1/query/%d"
 	archiveQueryURLTemplate          = "%s/api/v1/query/%d/archive"
+	searchDatasetsURLTemplate        = "%s/api/v1/datasets/search"
 )
 
 var ErrorRetriesExhausted = errors.New("retries have been exhausted")
