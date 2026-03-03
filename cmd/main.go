@@ -9,6 +9,7 @@ import (
 
 	"github.com/duneanalytics/duneapi-client-go/config"
 	"github.com/duneanalytics/duneapi-client-go/dune"
+	"github.com/duneanalytics/duneapi-client-go/models"
 )
 
 func main() {
@@ -43,7 +44,10 @@ func main() {
 
 	if *executionID == "" {
 		// Submitting query for new execution
-		execution, err = client.RunQuery(*queryID, queryParameters)
+		execution, err = client.RunQuery(models.ExecuteRequest{
+			QueryID:         *queryID,
+			QueryParameters: queryParameters,
+		})
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "failed to run query:", err)
 			os.Exit(1)
