@@ -29,6 +29,7 @@ type GetQueryResponse struct {
 	IsPrivate    bool             `json:"is_private"`
 	IsArchived   bool             `json:"is_archived"`
 	IsUnsaved    bool             `json:"is_unsaved"`
+	IsTemp       bool             `json:"is_temp"`
 	Version      int              `json:"version"`
 	QueryEngine  string           `json:"query_engine"`
 	Tags         []string         `json:"tags"`
