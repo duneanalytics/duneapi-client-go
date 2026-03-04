@@ -173,6 +173,63 @@ func TestQueryExecuteWithPerformance(t *testing.T) {
 	require.NotNil(t, gotBody["query_parameters"])
 }
 
+func TestSearchDatasets(t *testing.T) {
+	var gotMethod, gotPath string
+	var gotBody models.SearchDatasetsRequest
+
+	client := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		gotMethod = r.Method
+		gotPath = r.URL.Path
+		body, _ := io.ReadAll(r.Body)
+		json.Unmarshal(body, &gotBody)
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(models.SearchDatasetsResponse{
+			Total: 1,
+			Results: []models.SearchDatasetResult{
+				{FullName: "dex.trades", Category: "spell"},
+			},
+			Pagination: models.SearchDatasetsPagination{
+				Limit:   10,
+				Offset:  0,
+				HasMore: false,
+			},
+		})
+	})
+
+	query := "dex trades"
+	limit := int32(10)
+	resp, err := client.SearchDatasets(models.SearchDatasetsRequest{
+		Query:      &query,
+		Categories: []string{"spell"},
+		Limit:      &limit,
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, "POST", gotMethod)
+	require.Equal(t, "/api/v1/datasets/search", gotPath)
+	require.Equal(t, "dex trades", *gotBody.Query)
+	require.Equal(t, []string{"spell"}, gotBody.Categories)
+	require.Equal(t, int32(10), *gotBody.Limit)
+	require.Equal(t, int32(1), resp.Total)
+	require.Len(t, resp.Results, 1)
+	require.Equal(t, "dex.trades", resp.Results[0].FullName)
+	require.Equal(t, "spell", resp.Results[0].Category)
+	require.False(t, resp.Pagination.HasMore)
+}
+
+func TestSearchDatasetsError(t *testing.T) {
+	client := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ErrorResponse{Error: "invalid request"})
+	})
+
+	_, err := client.SearchDatasets(models.SearchDatasetsRequest{})
+
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "invalid request")
+}
+
 func TestSQLExecuteWithQueryParameters(t *testing.T) {
 	var gotBody map[string]any
 

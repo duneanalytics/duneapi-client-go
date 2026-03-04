@@ -3,6 +3,7 @@ package e2e
 import (
 	"testing"
 
+	"github.com/duneanalytics/duneapi-client-go/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -111,5 +112,29 @@ func TestGetDatasetWithUploadedTable(t *testing.T) {
 
 		assert.Equal(t, fullName, result.FullName)
 		assert.Equal(t, "uploaded_table", result.Type)
+	}
+}
+
+func TestSearchDatasets(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping E2E test in short mode")
+	}
+
+	client := setupClient(t)
+
+	query := "ethereum transactions"
+	limit := int32(5)
+	result, err := client.SearchDatasets(models.SearchDatasetsRequest{
+		Query: &query,
+		Limit: &limit,
+	})
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, result.Total, int32(0))
+	assert.NotNil(t, result.Results)
+
+	if len(result.Results) > 0 {
+		dataset := result.Results[0]
+		assert.NotEmpty(t, dataset.FullName)
+		assert.NotEmpty(t, dataset.Category)
 	}
 }
