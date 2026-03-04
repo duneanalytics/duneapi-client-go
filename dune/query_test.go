@@ -2,6 +2,7 @@ package dune
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -48,6 +49,83 @@ func TestCreateQuery(t *testing.T) {
 	require.Equal(t, "Test Query", gotBody.Name)
 	require.Equal(t, "SELECT 1", gotBody.QuerySQL)
 	require.Equal(t, 12345, resp.QueryID)
+}
+
+func TestCreateTempQuery(t *testing.T) {
+	var gotBody models.CreateQueryRequest
+
+	client := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		json.Unmarshal(body, &gotBody)
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(models.CreateQueryResponse{QueryID: 99})
+	})
+
+	resp, err := client.CreateQuery(models.CreateQueryRequest{
+		Name:     "Temp Query",
+		QuerySQL: "SELECT 1",
+		IsTemp:   true,
+	})
+
+	require.NoError(t, err)
+	require.True(t, gotBody.IsTemp)
+	require.Equal(t, 99, resp.QueryID)
+}
+
+func TestCreateTempQueryRoundtrip(t *testing.T) {
+	// Simulates a create → get roundtrip with a mock server,
+	// verifying is_temp flows correctly through both request and response.
+	const queryID = 777
+
+	var gotCreateBody map[string]any
+
+	client := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == "POST" && r.URL.Path == "/api/v1/query":
+			body, _ := io.ReadAll(r.Body)
+			json.Unmarshal(body, &gotCreateBody)
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(models.CreateQueryResponse{QueryID: queryID})
+
+		case r.Method == "GET" && r.URL.Path == fmt.Sprintf("/api/v1/query/%d", queryID):
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(models.GetQueryResponse{
+				QueryID:   queryID,
+				Name:      "Temp E2E",
+				QuerySQL:  "SELECT 1",
+				IsTemp:    true,
+				IsUnsaved: true,
+			})
+
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	})
+
+	// Step 1: Create a temp query
+	createResp, err := client.CreateQuery(models.CreateQueryRequest{
+		Name:     "Temp E2E",
+		QuerySQL: "SELECT 1",
+		IsTemp:   true,
+	})
+	require.NoError(t, err)
+	require.Equal(t, queryID, createResp.QueryID)
+
+	// Verify is_temp was sent in the JSON body
+	require.Equal(t, true, gotCreateBody["is_temp"])
+
+	// Verify is_private was omitted (omitempty, default false)
+	_, hasIsPrivate := gotCreateBody["is_private"]
+	require.False(t, hasIsPrivate, "is_private should be omitted when false")
+
+	// Step 2: Get the query back and verify temp fields
+	getResp, err := client.GetQuery(queryID)
+	require.NoError(t, err)
+	require.Equal(t, queryID, getResp.QueryID)
+	require.Equal(t, "Temp E2E", getResp.Name)
+	require.True(t, getResp.IsTemp, "is_temp should be true in get response")
+	require.True(t, getResp.IsUnsaved, "is_unsaved should be true in get response")
 }
 
 func TestGetQuery(t *testing.T) {

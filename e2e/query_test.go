@@ -109,6 +109,31 @@ func TestCreateQueryWithDescription(t *testing.T) {
 	assert.Equal(t, "E2E test query with description", getResp.Description)
 }
 
+func TestCreateTempQuery(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping E2E test in short mode")
+	}
+
+	client := setupClient(t)
+
+	// Create a temp query
+	createResp, err := client.CreateQuery(models.CreateQueryRequest{
+		Name:     generateQueryName(),
+		QuerySQL: "SELECT 1 AS test_value",
+		IsTemp:   true,
+	})
+	require.NoError(t, err)
+	assert.Greater(t, createResp.QueryID, 0)
+
+	// Get it back and verify it's marked as temp
+	getResp, err := client.GetQuery(createResp.QueryID)
+	require.NoError(t, err)
+	assert.Equal(t, createResp.QueryID, getResp.QueryID)
+	assert.True(t, getResp.IsTemp, "query should have is_temp=true")
+	assert.True(t, getResp.IsUnsaved, "query should have is_unsaved=true")
+	assert.Equal(t, "SELECT 1 AS test_value", getResp.QuerySQL)
+}
+
 func TestQueryExecuteAndGetResults(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping E2E test in short mode")
