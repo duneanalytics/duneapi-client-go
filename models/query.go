@@ -12,6 +12,7 @@ type CreateQueryRequest struct {
 	QuerySQL    string           `json:"query_sql"`
 	Description string           `json:"description,omitempty"`
 	IsPrivate   bool             `json:"is_private,omitempty"`
+	IsTemp      bool             `json:"is_temp,omitempty"`
 	Parameters  []QueryParameter `json:"parameters,omitempty"`
 }
 

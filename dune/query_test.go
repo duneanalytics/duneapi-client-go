@@ -50,6 +50,28 @@ func TestCreateQuery(t *testing.T) {
 	require.Equal(t, 12345, resp.QueryID)
 }
 
+func TestCreateTempQuery(t *testing.T) {
+	var gotBody models.CreateQueryRequest
+
+	client := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		json.Unmarshal(body, &gotBody)
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(models.CreateQueryResponse{QueryID: 99})
+	})
+
+	resp, err := client.CreateQuery(models.CreateQueryRequest{
+		Name:     "Temp Query",
+		QuerySQL: "SELECT 1",
+		IsTemp:   true,
+	})
+
+	require.NoError(t, err)
+	require.True(t, gotBody.IsTemp)
+	require.Equal(t, 99, resp.QueryID)
+}
+
 func TestGetQuery(t *testing.T) {
 	var gotMethod, gotPath string
 
