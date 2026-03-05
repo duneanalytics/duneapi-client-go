@@ -93,3 +93,31 @@ func (c *duneClient) SearchDatasets(req models.SearchDatasetsRequest) (*models.S
 
 	return &searchResp, nil
 }
+
+func (c *duneClient) SearchDatasetsByContractAddress(
+	req models.SearchDatasetsByContractAddressRequest,
+) (*models.SearchDatasetsResponse, error) {
+	searchURL := fmt.Sprintf(searchDatasetsByContractAddressURLTemplate, c.env.Host)
+
+	jsonData, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	httpReq, err := http.NewRequest("POST", searchURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := httpRequest(c.env.APIKey, httpReq)
+	if err != nil {
+		return nil, err
+	}
+
+	var searchResp models.SearchDatasetsResponse
+	if err := decodeBody(resp, &searchResp); err != nil {
+		return nil, err
+	}
+
+	return &searchResp, nil
+}
