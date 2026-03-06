@@ -21,19 +21,19 @@ type CreateQueryResponse struct {
 }
 
 type GetQueryResponse struct {
-	QueryID      int              `json:"query_id"`
-	Name         string           `json:"name"`
-	Description  string           `json:"description"`
-	QuerySQL     string           `json:"query_sql"`
-	Owner        string           `json:"owner"`
-	IsPrivate    bool             `json:"is_private"`
-	IsArchived   bool             `json:"is_archived"`
-	IsUnsaved    bool             `json:"is_unsaved"`
-	IsTemp       bool             `json:"is_temp"`
-	Version      int              `json:"version"`
-	QueryEngine  string           `json:"query_engine"`
-	Tags         []string         `json:"tags"`
-	Parameters   []QueryParameter `json:"parameters"`
+	QueryID     int              `json:"query_id"`
+	Name        string           `json:"name"`
+	Description string           `json:"description"`
+	QuerySQL    string           `json:"query_sql"`
+	Owner       string           `json:"owner"`
+	IsPrivate   bool             `json:"is_private"`
+	IsArchived  bool             `json:"is_archived"`
+	IsUnsaved   bool             `json:"is_unsaved"`
+	IsTemp      bool             `json:"is_temp"`
+	Version     int              `json:"version"`
+	QueryEngine string           `json:"query_engine"`
+	Tags        []string         `json:"tags"`
+	Parameters  []QueryParameter `json:"parameters"`
 }
 
 type UpdateQueryRequest struct {

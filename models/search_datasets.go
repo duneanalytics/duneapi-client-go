@@ -4,7 +4,6 @@ import "encoding/json"
 
 type SearchDatasetsRequest struct {
 	Query           *string  `json:"query,omitempty"`
-	ContractAddress *string  `json:"contract_address,omitempty"`
 	Categories      []string `json:"categories,omitempty"`
 	Blockchains     []string `json:"blockchains,omitempty"`
 	DatasetTypes    []string `json:"dataset_types,omitempty"`
