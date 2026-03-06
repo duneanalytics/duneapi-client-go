@@ -125,6 +125,9 @@ type DuneClient interface {
 
 	// SearchDatasets searches for datasets across the catalog with advanced filters
 	SearchDatasets(req models.SearchDatasetsRequest) (*models.SearchDatasetsResponse, error)
+
+	// SearchDatasetsByContractAddress finds decoded datasets associated with a smart contract address
+	SearchDatasetsByContractAddress(req models.SearchDatasetsByContractAddressRequest) (*models.SearchDatasetsResponse, error)
 }
 
 type duneClient struct {
@@ -132,35 +135,36 @@ type duneClient struct {
 }
 
 var (
-	cancelURLTemplate                = "%s/api/v1/execution/%s/cancel"
-	executeURLTemplate               = "%s/api/v1/query/%d/execute"
-	sqlExecuteURLTemplate            = "%s/api/v1/sql/execute"
-	pipelineExecuteURLTemplate       = "%s/api/v1/query/%s/pipeline/execute"
-	pipelineStatusURLTemplate        = "%s/api/v1/pipelines/executions/%s/status"
-	statusURLTemplate                = "%s/api/v1/execution/%s/status"
-	executionResultsURLTemplate      = "%s/api/v1/execution/%s/results"
-	executionResultsCSVURLTemplate   = "%s/api/v1/execution/%s/results/csv"
-	queryResultsURLTemplate          = "%s/api/v1/query/%s/results"
-	queryResultsCSVURLTemplate       = "%s/api/v1/query/%s/results/csv"
-	usageURLTemplate                 = "%s/api/v1/usage"
-	listDatasetsURLTemplate          = "%s/api/v1/datasets"
-	getDatasetURLTemplate            = "%s/api/v1/datasets/%s"
-	listUploadsURLTemplate           = "%s/api/v1/uploads"
-	createTableURLTemplate           = "%s/api/v1/uploads"
-	uploadCSVURLTemplate             = "%s/api/v1/uploads/csv"
-	deleteTableURLTemplate           = "%s/api/v1/uploads/%s/%s"
-	clearTableURLTemplate            = "%s/api/v1/uploads/%s/%s/clear"
-	insertTableURLTemplate           = "%s/api/v1/uploads/%s/%s/insert"
-	listTablesDeprecatedURLTemplate  = "%s/api/v1/tables"
-	createTableDeprecatedURLTemplate = "%s/api/v1/table/create"
-	uploadCSVDeprecatedURLTemplate   = "%s/api/v1/table/upload/csv"
-	deleteTableDeprecatedURLTemplate = "%s/api/v1/table/%s/%s"
-	clearTableDeprecatedURLTemplate  = "%s/api/v1/table/%s/%s/clear"
-	insertTableDeprecatedURLTemplate = "%s/api/v1/table/%s/%s/insert"
-	createQueryURLTemplate           = "%s/api/v1/query"
-	queryURLTemplate                 = "%s/api/v1/query/%d"
-	archiveQueryURLTemplate          = "%s/api/v1/query/%d/archive"
-	searchDatasetsURLTemplate        = "%s/api/v1/datasets/search"
+	cancelURLTemplate                          = "%s/api/v1/execution/%s/cancel"
+	executeURLTemplate                         = "%s/api/v1/query/%d/execute"
+	sqlExecuteURLTemplate                      = "%s/api/v1/sql/execute"
+	pipelineExecuteURLTemplate                 = "%s/api/v1/query/%s/pipeline/execute"
+	pipelineStatusURLTemplate                  = "%s/api/v1/pipelines/executions/%s/status"
+	statusURLTemplate                          = "%s/api/v1/execution/%s/status"
+	executionResultsURLTemplate                = "%s/api/v1/execution/%s/results"
+	executionResultsCSVURLTemplate             = "%s/api/v1/execution/%s/results/csv"
+	queryResultsURLTemplate                    = "%s/api/v1/query/%s/results"
+	queryResultsCSVURLTemplate                 = "%s/api/v1/query/%s/results/csv"
+	usageURLTemplate                           = "%s/api/v1/usage"
+	listDatasetsURLTemplate                    = "%s/api/v1/datasets"
+	getDatasetURLTemplate                      = "%s/api/v1/datasets/%s"
+	listUploadsURLTemplate                     = "%s/api/v1/uploads"
+	createTableURLTemplate                     = "%s/api/v1/uploads"
+	uploadCSVURLTemplate                       = "%s/api/v1/uploads/csv"
+	deleteTableURLTemplate                     = "%s/api/v1/uploads/%s/%s"
+	clearTableURLTemplate                      = "%s/api/v1/uploads/%s/%s/clear"
+	insertTableURLTemplate                     = "%s/api/v1/uploads/%s/%s/insert"
+	listTablesDeprecatedURLTemplate            = "%s/api/v1/tables"
+	createTableDeprecatedURLTemplate           = "%s/api/v1/table/create"
+	uploadCSVDeprecatedURLTemplate             = "%s/api/v1/table/upload/csv"
+	deleteTableDeprecatedURLTemplate           = "%s/api/v1/table/%s/%s"
+	clearTableDeprecatedURLTemplate            = "%s/api/v1/table/%s/%s/clear"
+	insertTableDeprecatedURLTemplate           = "%s/api/v1/table/%s/%s/insert"
+	createQueryURLTemplate                     = "%s/api/v1/query"
+	queryURLTemplate                           = "%s/api/v1/query/%d"
+	archiveQueryURLTemplate                    = "%s/api/v1/query/%d/archive"
+	searchDatasetsURLTemplate                  = "%s/api/v1/datasets/search"
+	searchDatasetsByContractAddressURLTemplate = "%s/api/v1/datasets/search-by-contract"
 )
 
 var ErrorRetriesExhausted = errors.New("retries have been exhausted")

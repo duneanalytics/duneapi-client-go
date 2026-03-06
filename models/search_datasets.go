@@ -3,17 +3,17 @@ package models
 import "encoding/json"
 
 type SearchDatasetsRequest struct {
-	Query          *string  `json:"query,omitempty"`
-	Categories     []string `json:"categories,omitempty"`
-	Blockchains    []string `json:"blockchains,omitempty"`
-	DatasetTypes   []string `json:"dataset_types,omitempty"`
-	Schemas        []string `json:"schemas,omitempty"`
-	OwnerScope     *string  `json:"owner_scope,omitempty"`
-	IncludePrivate *bool    `json:"include_private,omitempty"`
-	IncludeSchema  *bool    `json:"include_schema,omitempty"`
-	IncludeMetadata *bool   `json:"include_metadata,omitempty"`
-	Limit          *int32   `json:"limit,omitempty"`
-	Offset         *int32   `json:"offset,omitempty"`
+	Query           *string  `json:"query,omitempty"`
+	Categories      []string `json:"categories,omitempty"`
+	Blockchains     []string `json:"blockchains,omitempty"`
+	DatasetTypes    []string `json:"dataset_types,omitempty"`
+	Schemas         []string `json:"schemas,omitempty"`
+	OwnerScope      *string  `json:"owner_scope,omitempty"`
+	IncludePrivate  *bool    `json:"include_private,omitempty"`
+	IncludeSchema   *bool    `json:"include_schema,omitempty"`
+	IncludeMetadata *bool    `json:"include_metadata,omitempty"`
+	Limit           *int32   `json:"limit,omitempty"`
+	Offset          *int32   `json:"offset,omitempty"`
 }
 
 type SearchDatasetsResponse struct {
@@ -49,4 +49,12 @@ type SearchDatasetsPagination struct {
 	Offset     int32  `json:"offset"`
 	NextOffset *int32 `json:"next_offset,omitempty"`
 	HasMore    bool   `json:"has_more"`
+}
+
+type SearchDatasetsByContractAddressRequest struct {
+	ContractAddress string   `json:"contract_address"`
+	Blockchains     []string `json:"blockchains,omitempty"`
+	Limit           *int32   `json:"limit,omitempty"`
+	Offset          *int32   `json:"offset,omitempty"`
+	IncludeSchema   *bool    `json:"include_schema,omitempty"`
 }
