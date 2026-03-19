@@ -223,7 +223,7 @@ func (c *duneClient) QueryCancel(executionID string) error {
 	if err != nil {
 		return err
 	}
-	resp, err := httpRequest(c.env.APIKey, req)
+	resp, err := httpRequest(c.env, req)
 	if err != nil {
 		return err
 	}
@@ -247,7 +247,7 @@ func (c *duneClient) QueryExecute(req models.ExecuteRequest) (*models.ExecuteRes
 	if err != nil {
 		return nil, err
 	}
-	resp, err := httpRequest(c.env.APIKey, httpReq)
+	resp, err := httpRequest(c.env, httpReq)
 	if err != nil {
 		return nil, err
 	}
@@ -273,7 +273,7 @@ func (c *duneClient) SQLExecute(req models.ExecuteSQLRequest) (*models.ExecuteRe
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, httpReq)
+	resp, err := httpRequest(c.env, httpReq)
 	if err != nil {
 		return nil, err
 	}
@@ -299,7 +299,7 @@ func (c *duneClient) QueryPipelineExecute(req models.PipelineExecuteRequest) (*m
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, httpReq)
+	resp, err := httpRequest(c.env, httpReq)
 	if err != nil {
 		return nil, err
 	}
@@ -316,7 +316,7 @@ func (c *duneClient) PipelineStatus(pipelineExecutionID string) (*models.Pipelin
 	if err != nil {
 		return nil, err
 	}
-	resp, err := httpRequest(c.env.APIKey, req)
+	resp, err := httpRequest(c.env, req)
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +333,7 @@ func (c *duneClient) QueryStatus(executionID string) (*models.StatusResponse, er
 	if err != nil {
 		return nil, err
 	}
-	resp, err := httpRequest(c.env.APIKey, req)
+	resp, err := httpRequest(c.env, req)
 	if err != nil {
 		return nil, err
 	}
@@ -363,7 +363,7 @@ func (c *duneClient) getResults(url string, options models.ResultOptions) (*mode
 		if err != nil {
 			return nil, err
 		}
-		resp, err := httpRequest(c.env.APIKey, req)
+		resp, err := httpRequest(c.env, req)
 		if err != nil {
 			return nil, err
 		}
@@ -392,7 +392,7 @@ func (c *duneClient) getResultsCSV(url string) (io.Reader, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := httpRequest(c.env.APIKey, req)
+	resp, err := httpRequest(c.env, req)
 	if err != nil {
 		return nil, err
 	}
@@ -456,7 +456,7 @@ func (c *duneClient) getUsage(startDate, endDate *string) (*models.UsageResponse
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, req)
+	resp, err := httpRequest(c.env, req)
 	if err != nil {
 		return nil, err
 	}
@@ -477,7 +477,7 @@ func (c *duneClient) ListUploads(limit, offset int) (*models.UploadsListResponse
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, req)
+	resp, err := httpRequest(c.env, req)
 	if err != nil {
 		return nil, err
 	}
@@ -501,7 +501,7 @@ func (c *duneClient) CreateUpload(req models.UploadsCreateRequest) (*models.Uplo
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, httpReq)
+	resp, err := httpRequest(c.env, httpReq)
 	if err != nil {
 		return nil, err
 	}
@@ -525,7 +525,7 @@ func (c *duneClient) UploadCSV(req models.UploadsCSVRequest) (*models.UploadsCSV
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, httpReq)
+	resp, err := httpRequest(c.env, httpReq)
 	if err != nil {
 		return nil, err
 	}
@@ -544,7 +544,7 @@ func (c *duneClient) DeleteUpload(namespace, tableName string) (*models.UploadsD
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, req)
+	resp, err := httpRequest(c.env, req)
 	if err != nil {
 		return nil, err
 	}
@@ -563,7 +563,7 @@ func (c *duneClient) ClearUpload(namespace, tableName string) (*models.UploadsCl
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, req)
+	resp, err := httpRequest(c.env, req)
 	if err != nil {
 		return nil, err
 	}
@@ -586,7 +586,7 @@ func (c *duneClient) InsertIntoUpload(
 
 	req.Header.Set("Content-Type", contentType)
 
-	resp, err := httpRequest(c.env.APIKey, req)
+	resp, err := httpRequest(c.env, req)
 	if err != nil {
 		return nil, err
 	}
@@ -607,7 +607,7 @@ func (c *duneClient) ListTables(limit, offset int) (*models.UploadsListResponse,
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, req)
+	resp, err := httpRequest(c.env, req)
 	if err != nil {
 		return nil, err
 	}
@@ -631,7 +631,7 @@ func (c *duneClient) CreateTable(req models.UploadsCreateRequest) (*models.Uploa
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, httpReq)
+	resp, err := httpRequest(c.env, httpReq)
 	if err != nil {
 		return nil, err
 	}
@@ -655,7 +655,7 @@ func (c *duneClient) UploadCSVDeprecated(req models.UploadsCSVRequest) (*models.
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, httpReq)
+	resp, err := httpRequest(c.env, httpReq)
 	if err != nil {
 		return nil, err
 	}
@@ -677,7 +677,7 @@ func (c *duneClient) DeleteTable(namespace, tableName string) (*models.UploadsDe
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, req)
+	resp, err := httpRequest(c.env, req)
 	if err != nil {
 		return nil, err
 	}
@@ -699,7 +699,7 @@ func (c *duneClient) ClearTable(namespace, tableName string) (*models.UploadsCle
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, req)
+	resp, err := httpRequest(c.env, req)
 	if err != nil {
 		return nil, err
 	}
@@ -725,7 +725,7 @@ func (c *duneClient) InsertTable(
 
 	req.Header.Set("Content-Type", contentType)
 
-	resp, err := httpRequest(c.env.APIKey, req)
+	resp, err := httpRequest(c.env, req)
 	if err != nil {
 		return nil, err
 	}

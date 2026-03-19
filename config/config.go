@@ -8,8 +8,9 @@ import (
 const DefaultHost = "https://api.dune.com"
 
 type Env struct {
-	APIKey string
-	Host   string
+	APIKey  string
+	Host    string
+	Headers map[string]string
 }
 
 func getenvOrDefault(key string, defaultValue string) string {
