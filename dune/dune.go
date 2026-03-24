@@ -128,6 +128,9 @@ type DuneClient interface {
 
 	// SearchDatasetsByContractAddress finds decoded datasets associated with a smart contract address
 	SearchDatasetsByContractAddress(req models.SearchDatasetsByContractAddressRequest) (*models.SearchDatasetsResponse, error)
+
+	// WhoAmI returns the identity associated with the current API key
+	WhoAmI() (*models.WhoAmIResponse, error)
 }
 
 type duneClient struct {
@@ -165,6 +168,7 @@ var (
 	archiveQueryURLTemplate                    = "%s/api/v1/query/%d/archive"
 	searchDatasetsURLTemplate                  = "%s/api/v1/datasets/search"
 	searchDatasetsByContractAddressURLTemplate = "%s/api/v1/datasets/search-by-contract"
+	whoamiURLTemplate                          = "%s/api/whoami"
 )
 
 var ErrorRetriesExhausted = errors.New("retries have been exhausted")
