@@ -25,10 +25,12 @@ func decodeBody(resp *http.Response, dest interface{}) error {
 }
 
 func httpRequest(env *config.Env, req *http.Request) (*http.Response, error) {
-	req.Header.Add("X-DUNE-API-KEY", env.APIKey)
 	for key, value := range env.Headers {
-		req.Header.Set(key, value)
+		if key != "X-DUNE-API-KEY" && key != "Content-Type" {
+			req.Header.Set(key, value)
+		}
 	}
+	req.Header.Add("X-DUNE-API-KEY", env.APIKey)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
