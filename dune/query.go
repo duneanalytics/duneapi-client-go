@@ -22,7 +22,7 @@ func (c *duneClient) CreateQuery(req models.CreateQueryRequest) (*models.CreateQ
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, httpReq)
+	resp, err := httpRequest(c.env, httpReq)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (c *duneClient) GetQuery(queryID int) (*models.GetQueryResponse, error) {
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, req)
+	resp, err := httpRequest(c.env, req)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (c *duneClient) UpdateQuery(queryID int, req models.UpdateQueryRequest) (*m
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, httpReq)
+	resp, err := httpRequest(c.env, httpReq)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func (c *duneClient) ArchiveQuery(queryID int) (*models.UpdateQueryResponse, err
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, req)
+	resp, err := httpRequest(c.env, req)
 	if err != nil {
 		return nil, err
 	}

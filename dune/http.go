@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+
+	"github.com/duneanalytics/duneapi-client-go/config"
 )
 
 var ErrorReqUnsuccessful = errors.New("request was not successful")
@@ -22,8 +24,11 @@ func decodeBody(resp *http.Response, dest interface{}) error {
 	return nil
 }
 
-func httpRequest(apiKey string, req *http.Request) (*http.Response, error) {
-	req.Header.Add("X-DUNE-API-KEY", apiKey)
+func httpRequest(env *config.Env, req *http.Request) (*http.Response, error) {
+	req.Header.Add("X-DUNE-API-KEY", env.APIKey)
+	for key, value := range env.Headers {
+		req.Header.Set(key, value)
+	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)

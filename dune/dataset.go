@@ -28,7 +28,7 @@ func (c *duneClient) ListDatasets(
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, req)
+	resp, err := httpRequest(c.env, req)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (c *duneClient) GetDataset(slug string) (*models.DatasetResponse, error) {
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, req)
+	resp, err := httpRequest(c.env, req)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (c *duneClient) SearchDatasets(req models.SearchDatasetsRequest) (*models.S
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, httpReq)
+	resp, err := httpRequest(c.env, httpReq)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (c *duneClient) SearchDatasetsByContractAddress(
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, httpReq)
+	resp, err := httpRequest(c.env, httpReq)
 	if err != nil {
 		return nil, err
 	}

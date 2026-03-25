@@ -14,7 +14,7 @@ func (c *duneClient) WhoAmI() (*models.WhoAmIResponse, error) {
 		return nil, err
 	}
 
-	resp, err := httpRequest(c.env.APIKey, req)
+	resp, err := httpRequest(c.env, req)
 	if err != nil {
 		return nil, err
 	}
