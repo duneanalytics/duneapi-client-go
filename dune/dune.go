@@ -131,6 +131,9 @@ type DuneClient interface {
 
 	// WhoAmI returns the identity associated with the current API key
 	WhoAmI() (*models.WhoAmIResponse, error)
+
+	// CreateVisualization creates a new visualization on an existing query
+	CreateVisualization(req models.CreateVisualizationRequest) (*models.CreateVisualizationResponse, error)
 }
 
 type duneClient struct {
@@ -169,6 +172,7 @@ var (
 	searchDatasetsURLTemplate                  = "%s/api/v1/datasets/search"
 	searchDatasetsByContractAddressURLTemplate = "%s/api/v1/datasets/search-by-contract"
 	whoamiURLTemplate                          = "%s/api/whoami"
+	createVisualizationURLTemplate             = "%s/api/v1/query/%d/visualization"
 )
 
 var ErrorRetriesExhausted = errors.New("retries have been exhausted")
