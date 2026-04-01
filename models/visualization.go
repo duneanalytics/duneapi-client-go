@@ -1,7 +1,7 @@
 package models
 
 type CreateVisualizationRequest struct {
-	QueryID     int            `json:"-"`
+	QueryID     int            `json:"query_id"`
 	Name        string         `json:"name"`
 	Type        string         `json:"type"`
 	Description string         `json:"description,omitempty"`
