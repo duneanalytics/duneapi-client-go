@@ -184,9 +184,9 @@ var (
 	searchDatasetsURLTemplate                  = "%s/api/v1/datasets/search"
 	searchDatasetsByContractAddressURLTemplate = "%s/api/v1/datasets/search-by-contract"
 	whoamiURLTemplate                          = "%s/api/whoami"
-	createVisualizationURLTemplate             = "%s/api/v1/query/%d/visualization"
-	visualizationURLTemplate                   = "%s/api/v1/visualization/%d"
-	listVisualizationsURLTemplate              = "%s/api/v1/query/%d/visualizations"
+	createVisualizationURLTemplate             = "%s/api/v1/queries/%d/visualizations"
+	visualizationURLTemplate                   = "%s/api/v1/visualizations/%d"
+	listVisualizationsURLTemplate              = "%s/api/v1/queries/%d/visualizations"
 )
 
 var ErrorRetriesExhausted = errors.New("retries have been exhausted")
