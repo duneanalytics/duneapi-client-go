@@ -134,6 +134,18 @@ type DuneClient interface {
 
 	// CreateVisualization creates a new visualization on an existing query
 	CreateVisualization(req models.CreateVisualizationRequest) (*models.CreateVisualizationResponse, error)
+
+	// GetVisualization retrieves a visualization by ID
+	GetVisualization(visualizationID int) (*models.GetVisualizationResponse, error)
+
+	// UpdateVisualization updates an existing visualization
+	UpdateVisualization(visualizationID int, req models.UpdateVisualizationRequest) (*models.UpdateVisualizationResponse, error)
+
+	// DeleteVisualization deletes a visualization by ID
+	DeleteVisualization(visualizationID int) (*models.DeleteVisualizationResponse, error)
+
+	// ListQueryVisualizations returns a paginated list of visualizations for a query
+	ListQueryVisualizations(queryID, limit, offset int) (*models.ListVisualizationsResponse, error)
 }
 
 type duneClient struct {
@@ -172,7 +184,9 @@ var (
 	searchDatasetsURLTemplate                  = "%s/api/v1/datasets/search"
 	searchDatasetsByContractAddressURLTemplate = "%s/api/v1/datasets/search-by-contract"
 	whoamiURLTemplate                          = "%s/api/whoami"
-	createVisualizationURLTemplate             = "%s/api/v1/query/%d/visualization"
+	createVisualizationURLTemplate             = "%s/api/v1/queries/%d/visualizations"
+	visualizationURLTemplate                   = "%s/api/v1/visualizations/%d"
+	listVisualizationsURLTemplate              = "%s/api/v1/queries/%d/visualizations"
 )
 
 var ErrorRetriesExhausted = errors.New("retries have been exhausted")
