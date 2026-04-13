@@ -146,6 +146,21 @@ type DuneClient interface {
 
 	// ListQueryVisualizations returns a paginated list of visualizations for a query
 	ListQueryVisualizations(queryID, limit, offset int) (*models.ListVisualizationsResponse, error)
+
+	// CreateDashboard creates a new dashboard
+	CreateDashboard(req models.CreateDashboardRequest) (*models.DashboardResponse, error)
+
+	// GetDashboard retrieves a dashboard by ID
+	GetDashboard(dashboardID int) (*models.DashboardResponse, error)
+
+	// GetDashboardBySlug retrieves a dashboard by owner handle and slug
+	GetDashboardBySlug(ownerHandle, slug string) (*models.DashboardResponse, error)
+
+	// UpdateDashboard updates an existing dashboard
+	UpdateDashboard(dashboardID int, req models.UpdateDashboardRequest) (*models.DashboardResponse, error)
+
+	// ArchiveDashboard archives a dashboard by ID
+	ArchiveDashboard(dashboardID int) (*models.ArchiveDashboardResponse, error)
 }
 
 type duneClient struct {
@@ -187,6 +202,10 @@ var (
 	createVisualizationURLTemplate             = "%s/api/v1/queries/%d/visualizations"
 	visualizationURLTemplate                   = "%s/api/v1/visualizations/%d"
 	listVisualizationsURLTemplate              = "%s/api/v1/queries/%d/visualizations"
+	createDashboardURLTemplate                 = "%s/api/v1/dashboards"
+	dashboardURLTemplate                       = "%s/api/v1/dashboards/%d"
+	dashboardBySlugURLTemplate                 = "%s/api/v1/dashboards/by-slug/%s/%s"
+	archiveDashboardURLTemplate                = "%s/api/v1/dashboards/%d/archive"
 )
 
 var ErrorRetriesExhausted = errors.New("retries have been exhausted")
