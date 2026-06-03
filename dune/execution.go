@@ -25,7 +25,7 @@ type Execution interface {
 	GetStatus() (*models.StatusResponse, error)
 
 	// GetResultsV2 returns the results or status of the execution, depending on whether it has completed
-	// it uses options to refine futher what results to get
+	// it uses options to refine further what results to get
 	GetResultsV2(options models.ResultOptions) (*models.ResultsResponse, error)
 
 	// RunQueryGetResults  blocks until the execution is finished and returns the result
