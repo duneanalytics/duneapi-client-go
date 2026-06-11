@@ -172,6 +172,9 @@ func setupClient(t *testing.T) dune.DuneClient {
 	}
 
 	env := config.FromAPIKey(apiKey)
+	if host := os.Getenv("DUNE_API_HOST"); host != "" {
+		env.Host = host
+	}
 	return dune.NewDuneClient(env)
 }
 
