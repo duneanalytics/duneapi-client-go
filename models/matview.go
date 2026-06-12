@@ -28,7 +28,7 @@ type GetMaterializedViewResponse struct {
 	SQLID            string   `json:"sql_id"`
 	OwnerUserID      *int     `json:"owner_user_id,omitempty"`
 	OwnerTeamID      *int     `json:"owner_team_id,omitempty"`
-	QueryID          int64    `json:"query_id"`
+	QueryID          int      `json:"query_id"`
 	IsPrivate        bool     `json:"is_private"`
 	LastExecutionIDs []string `json:"last_execution_ids"`
 	TableSizeBytes   int64    `json:"table_size_bytes"`
@@ -39,7 +39,7 @@ type GetMaterializedViewResponse struct {
 type MaterializedViewListElement struct {
 	ID             string `json:"id"`
 	SQLID          string `json:"sql_id"`
-	QueryID        int64  `json:"query_id"`
+	QueryID        int    `json:"query_id"`
 	IsPrivate      bool   `json:"is_private"`
 	TableSizeBytes int64  `json:"table_size_bytes"`
 }
@@ -47,7 +47,7 @@ type MaterializedViewListElement struct {
 type ListMaterializedViewsResponse struct {
 	MaterializedViews []*MaterializedViewListElement `json:"materialized_views"`
 	// NextOffset is 0 when there are no further pages.
-	NextOffset int32 `json:"next_offset,omitempty"`
+	NextOffset int32 `json:"next_offset"`
 }
 
 type RefreshMaterializedViewRequest struct {

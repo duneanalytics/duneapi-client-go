@@ -54,7 +54,7 @@ func TestMaterializedViewLifecycle(t *testing.T) {
 	getResp, err := client.GetMaterializedView(fqName)
 	require.NoError(t, err)
 	assert.Equal(t, fqName, getResp.SQLID)
-	assert.Equal(t, int64(createResp.QueryID), getResp.QueryID)
+	assert.Equal(t, createResp.QueryID, getResp.QueryID)
 	assert.False(t, getResp.IsPrivate)
 
 	refreshResp, err := client.RefreshMaterializedView(fqName, models.RefreshMaterializedViewRequest{

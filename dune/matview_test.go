@@ -98,7 +98,7 @@ func TestGetMaterializedView(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "GET", gotMethod)
 	require.Equal(t, "/api/v1/materialized-views/dune.my_team.result_token_summary", gotPath)
-	require.Equal(t, int64(42), resp.QueryID)
+	require.Equal(t, 42, resp.QueryID)
 	require.True(t, resp.IsPrivate)
 	require.Equal(t, int64(1024), resp.TableSizeBytes)
 	require.NotNil(t, resp.Schedule)
