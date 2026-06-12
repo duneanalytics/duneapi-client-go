@@ -161,6 +161,21 @@ type DuneClient interface {
 
 	// ArchiveDashboard archives a dashboard by ID
 	ArchiveDashboard(dashboardID int) (*models.ArchiveDashboardResponse, error)
+
+	// UpsertMaterializedView creates or replaces a materialized view from a saved query
+	UpsertMaterializedView(req models.UpsertMaterializedViewRequest) (*models.UpsertMaterializedViewResponse, error)
+
+	// GetMaterializedView retrieves a materialized view by its fully-qualified SQL name
+	GetMaterializedView(name string) (*models.GetMaterializedViewResponse, error)
+
+	// ListMaterializedViews returns a paginated list of materialized views owned by the caller
+	ListMaterializedViews(limit, offset int) (*models.ListMaterializedViewsResponse, error)
+
+	// RefreshMaterializedView triggers a refresh of a materialized view by name
+	RefreshMaterializedView(name string, req models.RefreshMaterializedViewRequest) (*models.RefreshMaterializedViewResponse, error)
+
+	// DeleteMaterializedView deletes a materialized view by name
+	DeleteMaterializedView(name string) (*models.DeleteMaterializedViewResponse, error)
 }
 
 type duneClient struct {
@@ -206,6 +221,9 @@ var (
 	dashboardURLTemplate                       = "%s/api/v1/dashboards/%d"
 	dashboardBySlugURLTemplate                 = "%s/api/v1/dashboards/by-slug/%s/%s"
 	archiveDashboardURLTemplate                = "%s/api/v1/dashboards/%d/archive"
+	matviewsURLTemplate                        = "%s/api/v1/materialized-views"
+	matviewURLTemplate                         = "%s/api/v1/materialized-views/%s"
+	matviewRefreshURLTemplate                  = "%s/api/v1/materialized-views/%s/refresh"
 )
 
 var ErrorRetriesExhausted = errors.New("retries have been exhausted")
