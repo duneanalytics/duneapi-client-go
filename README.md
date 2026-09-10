@@ -93,6 +93,41 @@ for _, col := range dataset.Columns {
 }
 ```
 
+### Contract Decoding APIs
+
+Submit contracts for decoding in batches and track their status. Submissions are attributed to the user who created the API key; see the [docs](https://docs.dune.com/api-reference/contracts/introduction) for plan requirements.
+
+```go
+key := "uniswap-token/ethereum/1" // optional, makes retries safe
+resp, err := client.SubmitContracts(models.SubmitContractsRequest{
+	Submissions: []models.ContractSubmissionInput{{
+		BlockchainName: "ethereum",
+		Address:        "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
+		ProjectName:    "uniswap",
+		ContractName:   "UniswapToken",
+		ABI:            abiJSON, // json.RawMessage: the ABI array, or a JSON string containing it
+		IdempotencyKey: &key,
+	}},
+})
+if err != nil {
+	log.Fatal(err)
+}
+// One result per submission, matched by index.
+for _, result := range resp.Results {
+	if result.Error != nil {
+		fmt.Printf("#%d failed: %s\n", result.Index, *result.Error)
+		continue
+	}
+	fmt.Printf("#%d queued as %s (%s)\n", result.Index, *result.SubmissionID, *result.Status)
+}
+
+// Track status; pass page.NextCursor back as Cursor for the next page.
+page, err := client.ListContractSubmissions(models.ListContractSubmissionsOptions{
+	Status: "pending",
+	Limit:  20,
+})
+```
+
 ### Table Management APIs
 
 The client provides comprehensive methods for managing uploaded tables:
