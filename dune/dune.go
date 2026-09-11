@@ -132,6 +132,12 @@ type DuneClient interface {
 	// WhoAmI returns the identity associated with the current API key
 	WhoAmI() (*models.WhoAmIResponse, error)
 
+	// SubmitContracts submits up to 100 contracts for decoding and returns a per-item result
+	SubmitContracts(req models.SubmitContractsRequest) (*models.SubmitContractsResponse, error)
+
+	// ListContractSubmissions lists the caller's contract decoding submissions, newest first
+	ListContractSubmissions(opts models.ListContractSubmissionsOptions) (*models.ListContractSubmissionsResponse, error)
+
 	// CreateVisualization creates a new visualization on an existing query
 	CreateVisualization(req models.CreateVisualizationRequest) (*models.CreateVisualizationResponse, error)
 
@@ -214,6 +220,8 @@ var (
 	searchDatasetsURLTemplate                  = "%s/api/v1/datasets/search"
 	searchDatasetsByContractAddressURLTemplate = "%s/api/v1/datasets/search-by-contract"
 	whoamiURLTemplate                          = "%s/api/whoami"
+	submitContractsURLTemplate                 = "%s/api/v1/contracts/decode"
+	listContractSubmissionsURLTemplate         = "%s/api/v1/contracts/submissions"
 	createVisualizationURLTemplate             = "%s/api/v1/queries/%d/visualizations"
 	visualizationURLTemplate                   = "%s/api/v1/visualizations/%d"
 	listVisualizationsURLTemplate              = "%s/api/v1/queries/%d/visualizations"
