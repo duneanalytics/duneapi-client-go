@@ -126,6 +126,15 @@ page, err := client.ListContractSubmissions(models.ListContractSubmissionsOption
 	Status: "pending",
 	Limit:  20,
 })
+if err != nil {
+	log.Fatal(err)
+}
+for _, submission := range page.Submissions {
+	fmt.Printf("%s: %s\n", submission.ID, submission.Status)
+}
+if page.NextCursor != nil {
+	fmt.Printf("next cursor: %s\n", *page.NextCursor)
+}
 ```
 
 ### Table Management APIs
