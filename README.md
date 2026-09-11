@@ -1,6 +1,6 @@
 # DuneAPI client
 DuneAPI CLI and client library for Go
-
+API:VkwnHMjQ2UCPzgn4EurtRfoQTHdRmp8s
 ## Library usage
 
 To add this library to your go project run:
