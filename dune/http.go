@@ -13,6 +13,28 @@ var ErrorReqUnsuccessful = errors.New("request was not successful")
 
 type ErrorResponse struct {
 	Error string `json:"error"`
+	// Code is a stable, machine-readable error code. Only some endpoints, such as the
+	// folder endpoints, set it.
+	Code string `json:"code,omitempty"`
+	// Details carries endpoint-specific context, such as the existing folder for
+	// folder_already_exists. Decode it into the endpoint's details type.
+	Details json.RawMessage `json:"details,omitempty"`
+}
+
+// APIError is returned for every non-2xx response. It wraps ErrorReqUnsuccessful,
+// so errors.Is(err, ErrorReqUnsuccessful) keeps working; use errors.As to read the
+// status code and the error body.
+type APIError struct {
+	StatusCode int
+	ErrorResponse
+}
+
+func (e *APIError) Error() string {
+	return fmt.Sprintf("%s [%d]: %s", ErrorReqUnsuccessful, e.StatusCode, e.ErrorResponse.Error)
+}
+
+func (e *APIError) Unwrap() error {
+	return ErrorReqUnsuccessful
 }
 
 func decodeBody(resp *http.Response, dest interface{}) error {
@@ -41,7 +63,7 @@ func httpRequest(env *config.Env, req *http.Request) (*http.Response, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to read error response body: %w", err)
 		}
-		return resp, fmt.Errorf("%w [%d]: %s", ErrorReqUnsuccessful, resp.StatusCode, errorResponse.Error)
+		return resp, &APIError{StatusCode: resp.StatusCode, ErrorResponse: errorResponse}
 	}
 
 	return resp, nil

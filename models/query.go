@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type QueryParameter struct {
 	Key         string   `json:"key"`
 	Type        string   `json:"type"`
@@ -48,4 +50,22 @@ type UpdateQueryRequest struct {
 
 type UpdateQueryResponse struct {
 	QueryID int `json:"query_id"`
+}
+
+// ListQueriesResponse is the response of GET /v1/queries.
+type ListQueriesResponse struct {
+	Queries []QueryOverview `json:"queries"`
+	// Total is the number of queries across all pages.
+	Total int `json:"total"`
+}
+
+// QueryOverview is a query as listed by ListQueries.
+type QueryOverview struct {
+	ID          int       `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Tags        []string  `json:"tags"`
+	Owner       string    `json:"owner"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
