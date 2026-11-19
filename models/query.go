@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type QueryParameter struct {
 	Key         string   `json:"key"`
@@ -46,6 +49,24 @@ type UpdateQueryRequest struct {
 	IsArchived  *bool            `json:"is_archived,omitempty"`
 	Tags        []string         `json:"tags,omitempty"`
 	Parameters  []QueryParameter `json:"parameters,omitempty"`
+}
+
+// MarshalJSON leaves out a nil Tags or Parameters, which keeps the current value, and sends
+// an empty one, which clears it.
+func (r UpdateQueryRequest) MarshalJSON() ([]byte, error) {
+	type plain UpdateQueryRequest
+	out := struct {
+		plain
+		Tags       *[]string         `json:"tags,omitempty"`
+		Parameters *[]QueryParameter `json:"parameters,omitempty"`
+	}{plain: plain(r)}
+	if r.Tags != nil {
+		out.Tags = &r.Tags
+	}
+	if r.Parameters != nil {
+		out.Parameters = &r.Parameters
+	}
+	return json.Marshal(out)
 }
 
 type UpdateQueryResponse struct {
