@@ -108,10 +108,33 @@ func (r *ResultsResponse) AddPageResult(pageResp *ResultsResponse) {
 type ResultOptions struct {
 	// request a specific page of rows
 	Page *ResultPageOption
+	// Columns returns only these columns, in this order.
+	Columns []string
+	// Filters keeps the rows that match a SQL WHERE-like expression, e.g. `"amount" > 0`.
+	Filters string
+	// SortBy orders the rows by these SQL ORDER BY expressions, in priority order,
+	// e.g. `"block_time" DESC`.
+	SortBy []string
+	// SampleCount returns a uniform random sample of this many rows in a single response.
+	// The API does not paginate a sample, so Page is ignored when it is set.
+	SampleCount uint32
 }
 
 func (r ResultOptions) ToURLValues() url.Values {
 	v := url.Values{}
+	if len(r.Columns) > 0 {
+		v.Add("columns", strings.Join(r.Columns, ","))
+	}
+	if r.Filters != "" {
+		v.Add("filters", r.Filters)
+	}
+	if len(r.SortBy) > 0 {
+		v.Add("sort_by", strings.Join(r.SortBy, ","))
+	}
+	if r.SampleCount > 0 {
+		v.Add("sample_count", fmt.Sprintf("%d", r.SampleCount))
+		return v
+	}
 	if r.Page != nil {
 		if r.Page.Offset > 0 {
 			v.Add("offset", fmt.Sprintf("%d", r.Page.Offset))

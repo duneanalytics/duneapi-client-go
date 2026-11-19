@@ -417,8 +417,9 @@ func (c *duneClient) QueryStatus(executionID string) (*models.StatusResponse, er
 func (c *duneClient) getResults(url string, options models.ResultOptions) (*models.ResultsResponse, error) {
 	var out models.ResultsResponse
 
-	// track if we have request for a single page
-	singlePage := options.Page != nil && (options.Page.Offset > 0 || options.Page.Limit > 0)
+	// track if we have request for a single page; a sample always comes back in one response
+	singlePage := options.SampleCount > 0 ||
+		(options.Page != nil && (options.Page.Offset > 0 || options.Page.Limit > 0))
 
 	if options.Page == nil {
 		options.Page = &models.ResultPageOption{Limit: models.LimitRows}
