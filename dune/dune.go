@@ -355,7 +355,9 @@ func (c *duneClient) QueryCancel(executionID string) error {
 	}
 
 	var cancelResp models.CancelResponse
-	decodeBody(resp, &cancelResp)
+	if err := decodeBody(resp, &cancelResp); err != nil {
+		return err
+	}
 	if err := cancelResp.HasError(); err != nil {
 		return err
 	}
@@ -379,7 +381,9 @@ func (c *duneClient) QueryExecute(req models.ExecuteRequest) (*models.ExecuteRes
 	}
 
 	var executeResp models.ExecuteResponse
-	decodeBody(resp, &executeResp)
+	if err := decodeBody(resp, &executeResp); err != nil {
+		return nil, err
+	}
 	if err := executeResp.HasError(); err != nil {
 		return nil, err
 	}
@@ -405,7 +409,9 @@ func (c *duneClient) SQLExecute(req models.ExecuteSQLRequest) (*models.ExecuteRe
 	}
 
 	var executeResp models.ExecuteResponse
-	decodeBody(resp, &executeResp)
+	if err := decodeBody(resp, &executeResp); err != nil {
+		return nil, err
+	}
 	if err := executeResp.HasError(); err != nil {
 		return nil, err
 	}
@@ -431,7 +437,9 @@ func (c *duneClient) QueryPipelineExecute(req models.PipelineExecuteRequest) (*m
 	}
 
 	var pipelineResp models.PipelineExecuteResponse
-	decodeBody(resp, &pipelineResp)
+	if err := decodeBody(resp, &pipelineResp); err != nil {
+		return nil, err
+	}
 
 	return &pipelineResp, nil
 }
@@ -448,7 +456,9 @@ func (c *duneClient) PipelineStatus(pipelineExecutionID string) (*models.Pipelin
 	}
 
 	var pipelineStatusResp models.PipelineStatusResponse
-	decodeBody(resp, &pipelineStatusResp)
+	if err := decodeBody(resp, &pipelineStatusResp); err != nil {
+		return nil, err
+	}
 
 	return &pipelineStatusResp, nil
 }
@@ -465,7 +475,9 @@ func (c *duneClient) QueryStatus(executionID string) (*models.StatusResponse, er
 	}
 
 	var statusResp models.StatusResponse
-	decodeBody(resp, &statusResp)
+	if err := decodeBody(resp, &statusResp); err != nil {
+		return nil, err
+	}
 	if err := statusResp.HasError(); err != nil {
 		return nil, err
 	}
@@ -591,7 +603,9 @@ func (c *duneClient) getUsage(startDate, endDate *string) (*models.UsageResponse
 	}
 
 	var usageResp models.UsageResponse
-	decodeBody(resp, &usageResp)
+	if err := decodeBody(resp, &usageResp); err != nil {
+		return nil, err
+	}
 
 	return &usageResp, nil
 }
@@ -612,7 +626,9 @@ func (c *duneClient) ListUploads(limit, offset int) (*models.UploadsListResponse
 	}
 
 	var uploadsResp models.UploadsListResponse
-	decodeBody(resp, &uploadsResp)
+	if err := decodeBody(resp, &uploadsResp); err != nil {
+		return nil, err
+	}
 
 	return &uploadsResp, nil
 }
@@ -636,7 +652,9 @@ func (c *duneClient) CreateUpload(req models.UploadsCreateRequest) (*models.Uplo
 	}
 
 	var createResp models.UploadsCreateResponse
-	decodeBody(resp, &createResp)
+	if err := decodeBody(resp, &createResp); err != nil {
+		return nil, err
+	}
 
 	return &createResp, nil
 }
@@ -660,7 +678,9 @@ func (c *duneClient) UploadCSV(req models.UploadsCSVRequest) (*models.UploadsCSV
 	}
 
 	var uploadResp models.UploadsCSVResponse
-	decodeBody(resp, &uploadResp)
+	if err := decodeBody(resp, &uploadResp); err != nil {
+		return nil, err
+	}
 
 	return &uploadResp, nil
 }
@@ -679,7 +699,9 @@ func (c *duneClient) DeleteUpload(namespace, tableName string) (*models.UploadsD
 	}
 
 	var deleteResp models.UploadsDeleteResponse
-	decodeBody(resp, &deleteResp)
+	if err := decodeBody(resp, &deleteResp); err != nil {
+		return nil, err
+	}
 
 	return &deleteResp, nil
 }
@@ -698,7 +720,9 @@ func (c *duneClient) ClearUpload(namespace, tableName string) (*models.UploadsCl
 	}
 
 	var clearResp models.UploadsClearResponse
-	decodeBody(resp, &clearResp)
+	if err := decodeBody(resp, &clearResp); err != nil {
+		return nil, err
+	}
 
 	return &clearResp, nil
 }
@@ -721,7 +745,9 @@ func (c *duneClient) InsertIntoUpload(
 	}
 
 	var insertResp models.UploadsInsertResponse
-	decodeBody(resp, &insertResp)
+	if err := decodeBody(resp, &insertResp); err != nil {
+		return nil, err
+	}
 
 	return &insertResp, nil
 }
@@ -742,7 +768,9 @@ func (c *duneClient) ListTables(limit, offset int) (*models.UploadsListResponse,
 	}
 
 	var tablesResp models.UploadsListResponse
-	decodeBody(resp, &tablesResp)
+	if err := decodeBody(resp, &tablesResp); err != nil {
+		return nil, err
+	}
 
 	return &tablesResp, nil
 }
@@ -766,7 +794,9 @@ func (c *duneClient) CreateTable(req models.UploadsCreateRequest) (*models.Uploa
 	}
 
 	var createResp models.UploadsCreateResponse
-	decodeBody(resp, &createResp)
+	if err := decodeBody(resp, &createResp); err != nil {
+		return nil, err
+	}
 
 	return &createResp, nil
 }
@@ -790,7 +820,9 @@ func (c *duneClient) UploadCSVDeprecated(req models.UploadsCSVRequest) (*models.
 	}
 
 	var uploadResp models.UploadsCSVResponse
-	decodeBody(resp, &uploadResp)
+	if err := decodeBody(resp, &uploadResp); err != nil {
+		return nil, err
+	}
 
 	return &uploadResp, nil
 }
@@ -812,7 +844,9 @@ func (c *duneClient) DeleteTable(namespace, tableName string) (*models.UploadsDe
 	}
 
 	var deleteResp models.UploadsDeleteResponse
-	decodeBody(resp, &deleteResp)
+	if err := decodeBody(resp, &deleteResp); err != nil {
+		return nil, err
+	}
 
 	return &deleteResp, nil
 }
@@ -834,7 +868,9 @@ func (c *duneClient) ClearTable(namespace, tableName string) (*models.UploadsCle
 	}
 
 	var clearResp models.UploadsClearResponse
-	decodeBody(resp, &clearResp)
+	if err := decodeBody(resp, &clearResp); err != nil {
+		return nil, err
+	}
 
 	return &clearResp, nil
 }
@@ -860,7 +896,9 @@ func (c *duneClient) InsertTable(
 	}
 
 	var insertResp models.UploadsInsertResponse
-	decodeBody(resp, &insertResp)
+	if err := decodeBody(resp, &insertResp); err != nil {
+		return nil, err
+	}
 
 	return &insertResp, nil
 }
