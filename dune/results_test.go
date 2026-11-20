@@ -63,3 +63,14 @@ func TestQueryResultsV2SampleIsOneRequest(t *testing.T) {
 	require.Len(t, got, 1)
 	require.Equal(t, url.Values{"sample_count": {"2"}}, got[0])
 }
+
+func TestResultsReportsAnUnreadableResponse(t *testing.T) {
+	client := newTestClient(t, func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"execution_id":"01EXEC","state":`))
+	})
+
+	resp, err := client.QueryResultsV2("01EXEC", models.ResultOptions{})
+
+	require.Nil(t, resp)
+	require.ErrorContains(t, err, "failed to parse response")
+}
