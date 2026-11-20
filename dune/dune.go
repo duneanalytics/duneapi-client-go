@@ -123,6 +123,54 @@ type DuneClient interface {
 	// ArchiveQuery archives a saved query
 	ArchiveQuery(queryID int) (*models.UpdateQueryResponse, error)
 
+	// UnarchiveQuery restores an archived query
+	UnarchiveQuery(queryID int) (*models.UpdateQueryResponse, error)
+
+	// MakeQueryPrivate makes a query private
+	MakeQueryPrivate(queryID int) (*models.UpdateQueryResponse, error)
+
+	// MakeQueryPublic makes a private query public
+	MakeQueryPublic(queryID int) (*models.UpdateQueryResponse, error)
+
+	// ListQueries lists the queries owned by the API key's owner
+	ListQueries(limit, offset int) (*models.ListQueriesResponse, error)
+
+	// ListFolders lists the folders under a folder or the library root
+	ListFolders(opts models.ListFoldersOptions) (*models.ListFoldersResponse, error)
+
+	// GetFolder returns a folder, its subfolders, and its queries and dashboards
+	GetFolder(folderID string, opts models.GetFolderOptions) (*models.GetFolderResponse, error)
+
+	// CreateFolder creates a folder
+	CreateFolder(req models.CreateFolderRequest) (*models.Folder, error)
+
+	// UpdateFolder changes a folder's name, description, icon, or color
+	UpdateFolder(folderID string, req models.UpdateFolderRequest) (*models.Folder, error)
+
+	// MoveFolder moves a folder under another folder or to the library root
+	MoveFolder(folderID string, req models.MoveFolderRequest) (*models.Folder, error)
+
+	// DeleteFolder deletes a folder; recursive deletes a folder that is not empty
+	DeleteFolder(folderID string, recursive bool) (*models.DeleteFolderResponse, error)
+
+	// MoveContent moves queries and dashboards into a folder or out of folders
+	MoveContent(req models.MoveContentRequest) (*models.MoveContentResponse, error)
+
+	// ListSchedules lists query, dashboard, and materialized view schedules
+	ListSchedules(opts models.ListSchedulesOptions) (*models.ListSchedulesResponse, error)
+
+	// SetQuerySchedule creates or replaces a query's schedule
+	SetQuerySchedule(queryID int, req models.SetScheduleRequest) (*models.SetScheduleResponse, error)
+
+	// DeleteQuerySchedule deletes a query's schedule
+	DeleteQuerySchedule(queryID int) (*models.DeleteScheduleResponse, error)
+
+	// SetDashboardSchedule creates or replaces a dashboard's refresh schedule
+	SetDashboardSchedule(dashboardID int, req models.SetScheduleRequest) (*models.SetScheduleResponse, error)
+
+	// DeleteDashboardSchedule deletes a dashboard's schedule
+	DeleteDashboardSchedule(dashboardID int) (*models.DeleteScheduleResponse, error)
+
 	// SearchDatasets searches for datasets across the catalog with advanced filters
 	SearchDatasets(req models.SearchDatasetsRequest) (*models.SearchDatasetsResponse, error)
 
@@ -217,6 +265,17 @@ var (
 	createQueryURLTemplate                     = "%s/api/v1/query"
 	queryURLTemplate                           = "%s/api/v1/query/%d"
 	archiveQueryURLTemplate                    = "%s/api/v1/query/%d/archive"
+	unarchiveQueryURLTemplate                  = "%s/api/v1/query/%d/unarchive"
+	privateQueryURLTemplate                    = "%s/api/v1/query/%d/private"
+	unprivateQueryURLTemplate                  = "%s/api/v1/query/%d/unprivate"
+	listQueriesURLTemplate                     = "%s/api/v1/queries"
+	foldersURLTemplate                         = "%s/api/v1/folders"
+	folderURLTemplate                          = "%s/api/v1/folders/%s"
+	moveFolderURLTemplate                      = "%s/api/v1/folders/%s/move"
+	moveContentURLTemplate                     = "%s/api/v1/content/move"
+	schedulesURLTemplate                       = "%s/api/v1/schedules"
+	queryScheduleURLTemplate                   = "%s/api/v1/queries/%d/schedule"
+	dashboardScheduleURLTemplate               = "%s/api/v1/dashboards/%d/schedule"
 	searchDatasetsURLTemplate                  = "%s/api/v1/datasets/search"
 	searchDatasetsByContractAddressURLTemplate = "%s/api/v1/datasets/search-by-contract"
 	whoamiURLTemplate                          = "%s/api/whoami"
@@ -417,8 +476,9 @@ func (c *duneClient) QueryStatus(executionID string) (*models.StatusResponse, er
 func (c *duneClient) getResults(url string, options models.ResultOptions) (*models.ResultsResponse, error) {
 	var out models.ResultsResponse
 
-	// track if we have request for a single page
-	singlePage := options.Page != nil && (options.Page.Offset > 0 || options.Page.Limit > 0)
+	// track if we have request for a single page; a sample always comes back in one response
+	singlePage := options.SampleCount > 0 ||
+		(options.Page != nil && (options.Page.Offset > 0 || options.Page.Limit > 0))
 
 	if options.Page == nil {
 		options.Page = &models.ResultPageOption{Limit: models.LimitRows}

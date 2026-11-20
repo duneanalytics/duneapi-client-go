@@ -137,6 +137,33 @@ if page.NextCursor != nil {
 }
 ```
 
+### Folder and Schedule APIs
+
+Organize queries and dashboards into library folders, and run queries or refresh dashboards on a schedule.
+
+```go
+color := "blue"
+folder, err := client.CreateFolder(models.CreateFolderRequest{Name: "RWA", Color: &color})
+var apiErr *dune.APIError
+if errors.As(err, &apiErr) && apiErr.Code == "folder_already_exists" {
+	var details models.FolderErrorDetails
+	_ = json.Unmarshal(apiErr.Details, &details) // details.ExistingFolderID names the folder
+}
+
+_, err = client.MoveContent(models.MoveContentRequest{
+	QueryIDs:       []int64{4512345},
+	TargetFolderID: &folder.FolderID, // nil takes the content out of folders
+})
+
+_, err = client.SetQuerySchedule(4512345, models.SetScheduleRequest{
+	CronExpression: "0 6 * * *", // UTC
+	Performance:    "medium",
+})
+
+_, err = client.MakeQueryPrivate(4512345)
+_, err = client.MakeQueryPublic(4512345)
+```
+
 ### Table Management APIs
 
 The client provides comprehensive methods for managing uploaded tables:

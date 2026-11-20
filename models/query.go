@@ -1,5 +1,10 @@
 package models
 
+import (
+	"encoding/json"
+	"time"
+)
+
 type QueryParameter struct {
 	Key         string   `json:"key"`
 	Type        string   `json:"type"`
@@ -46,6 +51,42 @@ type UpdateQueryRequest struct {
 	Parameters  []QueryParameter `json:"parameters,omitempty"`
 }
 
+// MarshalJSON leaves out a nil Tags or Parameters, which keeps the current value, and sends
+// an empty one, which clears it.
+func (r UpdateQueryRequest) MarshalJSON() ([]byte, error) {
+	type plain UpdateQueryRequest
+	out := struct {
+		plain
+		Tags       *[]string         `json:"tags,omitempty"`
+		Parameters *[]QueryParameter `json:"parameters,omitempty"`
+	}{plain: plain(r)}
+	if r.Tags != nil {
+		out.Tags = &r.Tags
+	}
+	if r.Parameters != nil {
+		out.Parameters = &r.Parameters
+	}
+	return json.Marshal(out)
+}
+
 type UpdateQueryResponse struct {
 	QueryID int `json:"query_id"`
+}
+
+// ListQueriesResponse is the response of GET /v1/queries.
+type ListQueriesResponse struct {
+	Queries []QueryOverview `json:"queries"`
+	// Total is the number of queries across all pages.
+	Total int `json:"total"`
+}
+
+// QueryOverview is a query as listed by ListQueries.
+type QueryOverview struct {
+	ID          int       `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Tags        []string  `json:"tags"`
+	Owner       string    `json:"owner"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
