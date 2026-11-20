@@ -153,13 +153,15 @@ func TestFolderErrorKeepsCodeAndDetails(t *testing.T) {
 			"details":{"subfolder_count":1,"query_count":3,"dashboard_count":0}}`))
 	})
 
-	_, err := client.DeleteFolder("f1", false)
+	resp, err := client.DeleteFolder("f1", false)
 
+	require.Nil(t, resp, "an error comes with a nil response, like the other DuneClient methods")
 	require.ErrorIs(t, err, ErrorReqUnsuccessful)
 	require.EqualError(t, err, "request was not successful [409]: Folder /Old is not empty")
 	var apiErr *APIError
 	require.True(t, errors.As(err, &apiErr))
 	require.Equal(t, http.StatusConflict, apiErr.StatusCode)
+	require.Equal(t, "Folder /Old is not empty", apiErr.Message)
 	require.Equal(t, "folder_not_empty", apiErr.Code)
 	var details models.FolderErrorDetails
 	require.NoError(t, json.Unmarshal(apiErr.Details, &details))

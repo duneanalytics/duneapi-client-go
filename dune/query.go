@@ -107,20 +107,17 @@ func (c *duneClient) ArchiveQuery(queryID int) (*models.UpdateQueryResponse, err
 
 // UnarchiveQuery restores an archived query.
 func (c *duneClient) UnarchiveQuery(queryID int) (*models.UpdateQueryResponse, error) {
-	var out models.UpdateQueryResponse
-	return &out, c.doJSON("POST", fmt.Sprintf(unarchiveQueryURLTemplate, c.env.Host, queryID), nil, &out)
+	return doJSON[models.UpdateQueryResponse](c, "POST", fmt.Sprintf(unarchiveQueryURLTemplate, c.env.Host, queryID), nil)
 }
 
 // MakeQueryPrivate makes a query private.
 func (c *duneClient) MakeQueryPrivate(queryID int) (*models.UpdateQueryResponse, error) {
-	var out models.UpdateQueryResponse
-	return &out, c.doJSON("POST", fmt.Sprintf(privateQueryURLTemplate, c.env.Host, queryID), nil, &out)
+	return doJSON[models.UpdateQueryResponse](c, "POST", fmt.Sprintf(privateQueryURLTemplate, c.env.Host, queryID), nil)
 }
 
 // MakeQueryPublic makes a private query public.
 func (c *duneClient) MakeQueryPublic(queryID int) (*models.UpdateQueryResponse, error) {
-	var out models.UpdateQueryResponse
-	return &out, c.doJSON("POST", fmt.Sprintf(unprivateQueryURLTemplate, c.env.Host, queryID), nil, &out)
+	return doJSON[models.UpdateQueryResponse](c, "POST", fmt.Sprintf(unprivateQueryURLTemplate, c.env.Host, queryID), nil)
 }
 
 // ListQueries lists the queries owned by the API key's owner, a page at a time.
@@ -132,6 +129,5 @@ func (c *duneClient) ListQueries(limit, offset int) (*models.ListQueriesResponse
 	if offset > 0 {
 		v.Set("offset", strconv.Itoa(offset))
 	}
-	var out models.ListQueriesResponse
-	return &out, c.doJSON("GET", withQuery(fmt.Sprintf(listQueriesURLTemplate, c.env.Host), v), nil, &out)
+	return doJSON[models.ListQueriesResponse](c, "GET", withQuery(fmt.Sprintf(listQueriesURLTemplate, c.env.Host), v), nil)
 }
