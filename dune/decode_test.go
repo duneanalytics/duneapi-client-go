@@ -12,8 +12,20 @@ import (
 // Every method that decodes a JSON response must report a body it cannot
 // parse, instead of returning an empty response that looks like success.
 func TestMethodsReportAnUnreadableResponse(t *testing.T) {
+	bodies := map[string]string{
+		"truncated": `{"execution_id":`,
+		"empty":     ``,
+	}
+	for bodyName, body := range bodies {
+		t.Run(bodyName, func(t *testing.T) {
+			testMethodsReportAnUnreadableResponse(t, body)
+		})
+	}
+}
+
+func testMethodsReportAnUnreadableResponse(t *testing.T, body string) {
 	client := newTestClient(t, func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = io.WriteString(w, `{"execution_id":`)
+		_, _ = io.WriteString(w, body)
 	})
 
 	calls := map[string]func() (any, error){
