@@ -74,3 +74,25 @@ func TestResultsReportsAnUnreadableResponse(t *testing.T) {
 	require.Nil(t, resp)
 	require.ErrorContains(t, err, "failed to parse response")
 }
+
+// A later page that fails to decode must not end the paging with the earlier
+// pages' rows, which would look like a complete result.
+func TestResultsReportsAnUnreadableLaterPage(t *testing.T) {
+	requests := 0
+	client := newTestClient(t, func(w http.ResponseWriter, _ *http.Request) {
+		requests++
+		if requests == 1 {
+			_, _ = io.WriteString(w, `{"execution_id":"01EXEC","query_id":1,"state":"QUERY_STATE_COMPLETED",
+				"execution_ended_at":"2026-01-01T00:00:00Z","next_offset":1,
+				"result":{"rows":[{"amount":3}],"metadata":{"column_names":["amount"],"row_count":1,"total_row_count":2}}}`)
+			return
+		}
+		_, _ = io.WriteString(w, `{"execution_id":"01EXEC","result":{"rows":[`)
+	})
+
+	resp, err := client.QueryResultsV2("01EXEC", models.ResultOptions{})
+
+	require.Nil(t, resp)
+	require.ErrorContains(t, err, "failed to parse response")
+	require.Equal(t, 2, requests)
+}
