@@ -496,7 +496,9 @@ func (c *duneClient) getResults(url string, options models.ResultOptions) (*mode
 		}
 
 		var pageResp models.ResultsResponse
-		decodeBody(resp, &pageResp)
+		if err := decodeBody(resp, &pageResp); err != nil {
+			return nil, err
+		}
 		if err := pageResp.HasError(); err != nil {
 			return nil, err
 		}
